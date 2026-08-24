@@ -15,6 +15,10 @@ import { MODEL_ID } from '../agents/config.js';
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(DIR, '..');
 
+// .env があれば読む。無くてもモックで動くので、存在しないことは失敗ではない。
+// （Cloud Run では .env を置かず、環境変数を直接渡す）
+try { process.loadEnvFile(path.join(ROOT, '.env')); } catch { /* 無ければ何もしない */ }
+
 const parts = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'parts.json'), 'utf8'));
 
 const app = express();

@@ -29,7 +29,15 @@ export const STATUS = {
 export function cheapestSufficient(options, neededGb) {
   const enough = (options ?? []).filter(o => o.gb >= neededGb && o.yen != null);
   if (!enough.length) return null;
-  return enough.reduce((best, o) => (o.yen < best.yen ? o : best));
+
+  // 調査側が信頼度に疑いを付けた値段は答えに使わない。
+  // 「その値段で買える」と言えないものを根拠に「買うな」と言うと、道具の前提が崩れる。
+  const trusted = enough.filter(o => !o.lowConfidence);
+  const pool = trusted.length ? trusted : enough;
+  const pick = pool.reduce((best, o) => (o.yen < best.yen ? o : best));
+
+  // 信頼できるものが1つも無く、やむを得ず疑わしい値を使った場合は、その事実を持たせる
+  return trusted.length ? pick : { ...pick, unverifiedPrice: true };
 }
 
 /**

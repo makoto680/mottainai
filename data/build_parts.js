@@ -75,6 +75,19 @@ function priceOf(x) {
   return null;
 }
 
+/**
+ * 調査側が信頼度に疑いを付けた行を見分ける。
+ *
+ * 実例：ノート用DDR4 8GBの4,980円は「2018年登録のバルク品で2026年の相場と不整合」と
+ * 生データ側に警告が書かれていた。これを黙って採用すると、
+ * 「この値段で買える」と言えないものを答えとして出すことになる。
+ * この道具は金額を根拠に「買うな」と言うので、そこが崩れると存在意義ごと消える。
+ */
+function isLowConfidence(x) {
+  const t = `${x.note ?? ''} ${x.confidence ?? ''}`;
+  return /LOW CONFIDENCE|信頼度低|要裏取り|DO NOT SHIP/i.test(t);
+}
+
 const storageOptions = (raw.prices?.storage ?? [])
   .filter(x => /SSD/i.test(x.type ?? ''))
   .map(x => {
@@ -84,6 +97,7 @@ const storageOptions = (raw.prices?.storage ?? [])
       label: `${x.type} ${x.capacity}`,
       gb: capacityGb(x.capacity),
       yen: p.yen, basis: p.basis,
+      lowConfidence: isLowConfidence(x),
       source: x.source ?? null,
       note: x.note ?? null,
     };
@@ -99,6 +113,7 @@ const memoryOptions = (raw.prices?.memory ?? [])
       label: `${x.type} ${x.capacity}`,
       gb: capacityGb(x.capacity),
       yen: p.yen, basis: p.basis,
+      lowConfidence: isLowConfidence(x),
       source: x.source ?? null,
       note: x.note ?? null,
     };

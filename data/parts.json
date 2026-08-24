@@ -1,7 +1,7 @@
 {
  "meta": {
   "builtFrom": "research_raw.json",
-  "builtAt": "2026-08-24 08:38",
+  "builtAt": "2026-08-24 08:57",
   "cpuCount": 125,
   "gpuCount": 87,
   "note": "数値は調査の生データをそのまま移送したもの。このスクリプトは値を作らない。"
@@ -4247,6 +4247,7 @@
     "gb": 500,
     "yen": 9990,
     "basis": "low",
+    "lowConfidence": false,
     "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130585.html",
     "note": "AGI AI238 = 9,990 (19.5 JPY/GB) lowest. typical/high 未取得."
    },
@@ -4256,6 +4257,7 @@
     "gb": 500,
     "yen": 12980,
     "basis": "low",
+    "lowConfidence": false,
     "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130585.html",
     "note": "MSI SPATIUM M450 = 12,980 (26.0 JPY/GB) lowest. 500GB is the WORST cost per GB of any NVMe capacity."
    },
@@ -4265,6 +4267,7 @@
     "gb": 1024,
     "yen": 22980,
     "basis": "typical",
+    "lowConfidence": false,
     "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130585.html",
     "note": "low=MSI SPATIUM S270 960GB 12,980 (a 54.3% off doorbuster, NOT a standing price); typical=Crucial BX500 1TB 22,980 (+3,180 vs previous survey)"
    },
@@ -4274,6 +4277,7 @@
     "gb": 1024,
     "yen": 24980,
     "basis": "typical",
+    "lowConfidence": false,
     "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130585.html",
     "note": "low=AGI AI198 20,900 (20.9 JPY/GB); typical=Sandisk SN5100 24,980 (25.0 JPY/GB, 6,000-7,000MB/s class)"
    },
@@ -4283,6 +4287,7 @@
     "gb": 2048,
     "yen": 34480,
     "basis": "typical",
+    "lowConfidence": false,
     "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130585.html",
     "note": "Crucial BX500 2TB = 34,480 (17.2 JPY/GB). Reference: 4TB BX500=59,800 (15.0 JPY/GB)"
    },
@@ -4292,6 +4297,7 @@
     "gb": 2048,
     "yen": 41800,
     "basis": "typical",
+    "lowConfidence": false,
     "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130585.html",
     "note": "low=CFD CSSD-M2O2TP4R7260A00 34,980 (17.5 JPY/GB, best NVMe cost per GB); Crucial P310 no-heatsink 2TB=41,800 (-13,000); Apacer AS2280P4X 2TB=48,400; KIOXIA EXCERIA BASIC 2TB=49,980 (-4,820). Reference PCIe5.0 2TB ADATA MARS 980 BLADE=57,800"
    }
@@ -4302,6 +4308,7 @@
     "gb": 8,
     "yen": 4980,
     "basis": "low",
+    "lowConfidence": true,
     "source": "https://kakaku.com/pc/pc-memory/itemlist.aspx?pdf_Spec102=2",
     "note": "LOW CONFIDENCE - Samsung M471A1K43CB1-CRC (PC4-19200) at 4,980. A 2018-registered part likely sold as bulk stock; inconsistent with the 2026 post-surge market. Verify before using in app logic. typical/high 未取得."
    },
@@ -4310,6 +4317,7 @@
     "gb": 16,
     "yen": 15800,
     "basis": "typical",
+    "lowConfidence": false,
     "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130945.html",
     "note": "DDR4-2666 8GBx2=15,400 (flat); DDR4-3200 8GBx2=15,800 (Dospara Select, flat). high=18,980 is kakaku.com lowest (Dosparaselecta D4D3200-8G2A1-RGB-BK) https://kakaku.com/pc/pc-memory/itemlist.aspx?pdf_Spec101=6"
    },
@@ -4318,6 +4326,7 @@
     "gb": 32,
     "yen": 30980,
     "basis": "typical",
+    "lowConfidence": false,
     "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130945.html",
     "note": "DDR4-2666 16GBx2=28,600 (flat); DDR4-3200 16GBx2=30,980 (Kingston, +1,000 vs previous survey = still rising). high=35,979 kakaku.com lowest (CFD W4U3200CS-16G). WARNING: DDR4 is the one type still climbing."
    },
@@ -4326,6 +4335,7 @@
     "gb": 32,
     "yen": 36300,
     "basis": "typical",
+    "lowConfidence": false,
     "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130945.html",
     "note": "DDR4-3200 SO-DIMM 16GBx2=36,300, +3,500 vs previous survey (rising). low=30,980 kakaku.com lowest (Dospara D4N3200-16G2A2)"
    },
@@ -4334,6 +4344,7 @@
     "gb": 32,
     "yen": 57980,
     "basis": "typical",
+    "lowConfidence": false,
     "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130945.html",
     "note": "DDR5-5600 16GBx2=39,980 (G.SKILL, -20,000 vs previous = cheapest of 2026); DDR5-4800=45,980 (-8,820); DDR5-6400=57,980 (-3,820); DDR5-5600 standard=59,980 (flat). DDR5 is FALLING."
    },
@@ -4342,6 +4353,7 @@
     "gb": 64,
     "yen": 69800,
     "basis": "typical",
+    "lowConfidence": false,
     "source": "https://kakaku.com/pc/pc-memory/itemlist.aspx?pdf_Spec101=6",
     "note": "Crucial CP2K32G4DFRA32A lowest price. Reference value only."
    },
@@ -4350,6 +4362,7 @@
     "gb": 64,
     "yen": 79980,
     "basis": "typical",
+    "lowConfidence": false,
     "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130945.html",
     "note": "DDR5-6000 32GBx2=79,980 (Kingston, -18,000 promo); DDR5-6400 32GBx2=111,980 (flat)"
    },
@@ -4358,6 +4371,7 @@
     "gb": 32,
     "yen": 81180,
     "basis": "typical",
+    "lowConfidence": false,
     "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130945.html",
     "note": "DDR5-5600 SO-DIMM 16GBx2=81,180 (Kingston, -660). Reference: kakaku.com Crucial CT16G56C46S5 16GBx1=36,980"
    }

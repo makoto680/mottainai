@@ -75,6 +75,19 @@ console.log('\n[3b] 足りる中で一番安いものを選ぶ');
   check('容量順ではなく価格で選ぶ', cheapestSufficient(opts, 256)?.yen === 6000);
   check('足りないものは候補にしない', cheapestSufficient(opts, 600)?.gb === 1024);
   check('どれも足りなければ null', cheapestSufficient(opts, 5000) === null);
+
+  // 調査側が「この値段は当てにならない」と付けた行を答えに使わない
+  const mixed = [
+    { gb: 8,  yen: 4980,  lowConfidence: true },
+    { gb: 16, yen: 15800, lowConfidence: false },
+  ];
+  const p = cheapestSufficient(mixed, 8);
+  check('信頼できない安値より、信頼できる値を選ぶ', p?.yen === 15800, `(選ばれたのは ${p?.yen})`);
+  check('信頼できる値なら疑いの印は付かない', !p?.unverifiedPrice);
+
+  const onlyDoubtful = [{ gb: 8, yen: 4980, lowConfidence: true }];
+  const q = cheapestSufficient(onlyDoubtful, 8);
+  check('他に無ければ使うが、疑いの印を残す', q?.unverifiedPrice === true);
 }
 
 console.log('\n[3c] 増設代が機体の値段に並ぶなら、増設を勧めない');

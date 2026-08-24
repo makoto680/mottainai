@@ -55,14 +55,18 @@ export function geminiLlm(apiKey) {
       return extractJson(await call(`${prompt}\n\n${JSON_RULE}`));
     },
 
-    /** 画像＋テキストからJSONを得る（画像はbase64のdataURLでもrawでも受ける） */
+    /**
+     * 画像＋テキストからJSONを得る（画像はbase64のdataURLでもrawでも受ける）
+     *
+     * Interactions API の入力は {type,...} のブロックを並べる形。
+     * 旧 generateContent の {role, parts:[{inlineData}]} を渡すと
+     * 400 Unknown parameter 'parts' で弾かれる（実測）。
+     */
     async visionJson(prompt, imageBase64, mimeType = 'image/jpeg') {
       const data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
       const input = [
-        { role: 'user', parts: [
-          { inlineData: { mimeType, data } },
-          { text: `${prompt}\n\n${JSON_RULE}` },
-        ] },
+        { type: 'image', data, mime_type: mimeType },
+        { type: 'text', text: `${prompt}\n\n${JSON_RULE}` },
       ];
       return extractJson(await call(input));
     },

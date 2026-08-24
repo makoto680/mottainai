@@ -341,6 +341,7 @@ function render(d){
       note += `<br><b style="color:var(--fix)">${escapeHtml(p.fixWith.label ?? '')} ${p.fixWith.yen?yen(p.fixWith.yen):''}</b>`;
       if(p.fixNote) note += `<br>${escapeHtml(p.fixNote)}`;
       if(p.fixWith.basis === 'low') note += `<br><span style="color:var(--ink-soft)">※この額は最安値。代表値は未取得。</span>`;
+      if(p.fixWith.unverifiedPrice) note += `<br><span style="color:var(--stop)">※この値段は裏が取れていない。実売を自分で確認してから買うこと。</span>`;
     }
     if(p.warning) note += `<br><b style="color:var(--stop)">${escapeHtml(p.warning)}</b>`;
     h += `<tr>
