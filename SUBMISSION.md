@@ -62,15 +62,21 @@ gcloud run services describe mottainai --region asia-northeast1
 > This agent looks for reasons you do NOT need to spend money.
 > The answer it is most pleased to reach is zero."
 
-**[0:50–1:40] 実演①：写真1枚**
+**[0:50–1:40] 実演①：スクショ2枚**
 
-> 画面：PCの中身の写真をドロップ → 用途を選ぶ → 実行
-> フリートのパネルが動くところを見せる
+> 画面：設定 › システム › 詳細情報 を <kbd>Win+Shift+S</kbd> で切り取り → ページに <kbd>Ctrl+V</kbd>
+> → ドライブの最適化画面（メディアの種類の列）も同じ手順で貼る → 用途を選ぶ → 実行
+> フリートのパネルが動き出すところを2〜3秒だけ見せる
 >
 > 字幕:
-> "Hand it a photo. Two agents start at once — one reads the hardware from the image,
+> "You do not need to open the case or know what is inside.
+> Windows already knows — two of its own screens say everything this tool judges.
+> Snip, paste, done. Two agents start at once — one reads the hardware from the images,
 > one reads what you actually do with the machine.
 > Then the verdict is computed. Not by a model — by ordinary, tested code."
+>
+> ⚠ 判定は15〜35秒かかる（Gemini側のテール遅延）。**待ちは録画でカットして
+> 「動き出し2〜3秒 → ジャンプ → 結果」でつなぐ**。リアルタイムで待たせない。
 
 **[1:40–2:20] 結果**
 
@@ -94,7 +100,7 @@ gcloud run services describe mottainai --region asia-northeast1
 
 **[2:50–3:15] 設計の芯**
 
-> 画面：`core/verdict.js` を映し、`npm test` を流して 38 passed を見せる
+> 画面：`core/verdict.js` を映し、`npm test` を流して **127 passed** を見せる
 >
 > 字幕:
 > "Models perceive and explain. Deterministic code decides.
@@ -112,6 +118,16 @@ gcloud run services describe mottainai --region asia-northeast1
 > are about to be told they are obsolete. Most of them are not."
 
 ---
+
+## 録画時の注意（2026-08-25 追記）
+
+- **既存の録画は使えない**（「あと約10年」の旧文言＋フッター22項目が映っている。現在は127項目）
+- 画面の文字は全部英語になっている。字幕と画面の言語が揃うので焼き込みは判定文の補足だけでいい
+- **「Solved for ¥0. One BIOS setting is all it takes.」はスクショ経路では絶対に出ない**
+  （TPMが映る画面を撮らせていないため）。この文言を録画に入れたいなら手入力デモで
+  tpm=disabled を指定する。出ないのが正常であり、スクショ経路の見出しは
+  「There is nothing to buy. Worst case, Windows 11 asks for one free BIOS setting.」
+- 判定は15〜35秒。録画は待ちカット前提で構成する
 
 ## 動画で必ず映すもの（要件）
 

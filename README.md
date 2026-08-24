@@ -17,8 +17,10 @@ useful go to waste.*
 
 ## What it does
 
-Hand it a photo — the inside of a desktop, a Device Manager screenshot, a spec label —
-and say what you use the machine for. A fleet of agents fans out, and you get back:
+Snip two screens Windows already has — **Settings › About** and the drive optimizer's
+media-type column — paste them straight in, and say what you use the machine for. No
+file needs saving, and a photo of the machine or a spec label is read the same way.
+A fleet of agents fans out, and you get back:
 
 - which parts you should **keep**, and roughly how long they will hold
 - which parts are **already far beyond** what your use needs (you were oversold once)
@@ -32,7 +34,7 @@ and say what you use the machine for. A fleet of agents fans out, and you get ba
 > **Models perceive and explain. Deterministic code decides.**
 
 Every verdict that touches money is computed in [`core/verdict.js`](core/verdict.js) —
-plain code, no model in the loop, 35 assertions in [`core/selftest.js`](core/selftest.js).
+plain code, no model in the loop, 127 assertions in [`core/selftest.js`](core/selftest.js).
 The language models are held to the two jobs they are good at: reading an image, and
 putting a finished result into words. The narrator is explicitly forbidden from
 introducing a number the engine did not produce.
@@ -40,7 +42,7 @@ introducing a number the engine did not produce.
 This is not stylistic. A tool whose whole promise is *"you don't need to spend that"*
 cannot afford a hallucinated price.
 
-One of those 35 assertions exists because the code got it wrong first: an early version
+One of those assertions exists because the code got it wrong first: an early version
 printed **"0円で解決する"** (solved for free) for a machine whose Windows 11 block really
 was a free BIOS toggle — while quietly needing ¥15,800 of RAM. The headline was true
 about the thing it was looking at and false about the bill. There is now a test that
@@ -67,7 +69,7 @@ place for one.
 ## The fleet
 
 ```
-photo ──▶ scan ──┐
+image ──▶ scan ──┐
                  ├──▶ resolve ──▶ verdict ──▶ narrate ──▶ answer
 words ─▶ workload┘                   ▲
                                      └── deterministic, no model
@@ -85,8 +87,8 @@ concurrently and join exactly once.
 
 | | count | source |
 |---|---|---|
-| CPUs | 6,719 | PassMark CPU Mark |
-| GPUs | 3,013 (221 integrated) | PassMark G3D Mark |
+| CPUs | 5,948 | PassMark CPU Mark |
+| GPUs | 3,013 (291 integrated) | PassMark G3D Mark |
 | Prices | RAM / SSD / whole machines | Japanese retail, observed 2026-08-24 |
 | Windows 11 support | 87 Intel / 399 AMD / 18 Qualcomm list entries | Microsoft |
 
@@ -132,7 +134,7 @@ tool explains the reason rather than repeating the verdict.
 
 ```bash
 npm install
-npm test                 # 35 assertions over the judgment engine
+npm test                 # 127 assertions over the judgment engine
 npm run build:data       # research_raw.json → parts.json
 npm start                # http://localhost:8080
 ```
