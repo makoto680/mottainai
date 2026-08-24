@@ -299,10 +299,10 @@ const reference = (refRow && refCpu) ? {
   cpuName: refCpu.name,
   cpuScore: refCpu.score,
   machineYen: refRow.low ?? refRow.yen,
-  label: '今売られている入門デスクトップ',
-  detail: 'PASOUL G-SLIM S2（Core i3-12100F / 8GB / 256GB SSD）',
+  label: 'an entry-level desktop sold new today',
+  detail: 'PASOUL G-SLIM S2 (Core i3-12100F / 8GB / 256GB SSD)',
   // 販売機はFつき（内蔵GPU無し）。CPUの演算性能は無印と同じなので、スコアは無印のものを使う。
-  caveat: '販売機はCore i3-12100F。スコアは内蔵GPU以外が同一の i3-12100 のもの',
+  caveat: 'The machine ships with a Core i3-12100F; the score shown is the i3-12100, identical apart from integrated graphics.',
   cpuSource: refCpu.source,
   priceSource: refRow.source,
 } : null;

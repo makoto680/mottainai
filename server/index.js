@@ -54,7 +54,7 @@ app.get('/api/health', (_req, res) => {
 /** 画面が用途一覧を出すために使う */
 app.get('/api/workloads', (_req, res) => {
   res.json(WORKLOAD_LIST.map(w => ({
-    id: w.id, label: w.label, labelEn: w.labelEn, note: w.note,
+    id: w.id, label: w.label, note: w.note,
   })));
 });
 
@@ -99,8 +99,8 @@ app.post('/api/judge', async (req, res) => {
 app.use((err, _req, res, _next) => {
   const status = err.type === 'entity.too.large' ? 413 : 400;
   const message = err.type === 'entity.too.large'
-    ? '画像が大きすぎる（上限20MB）。枚数を減らすか、写真なら縮小してから送って。'
-    : 'リクエストが読み取れなかった。ページを再読み込みしてやり直して。';
+    ? 'The images are too large (20MB limit). Send fewer of them, or shrink the photos first.'
+    : 'The request could not be read. Reload the page and try again.';
   console.error('[request-error]', err.type ?? err.message);
   res.status(status).json({ error: message });
 });

@@ -1,129 +1,134 @@
 /**
- * 用途プロファイル定義
+ * Workload profile definitions
  *
- * ここが MOTTAINAI の芯。世の中のツールは「用途→おすすめ構成（高い方）」を返すが、
- * ここでは「用途→本当に必要な最低ライン」と「それ以上は体感が変わらない天井」の
- * 両方を持つ。天井があるから「これ以上は要らない」と言い切れる。
+ * This is the heart of MOTTAINAI. Most tools map a workload to a recommended
+ * build (the expensive kind). Here every workload carries BOTH the floor it
+ * really needs and the ceiling past which nothing feels different. The ceiling
+ * is what lets the tool say "more than this buys you nothing" with a straight face.
  *
- * need   … これを下回ると実用にならない下限
- * enough … これを超えたら体感がほぼ変わらない（＝買い足す価値が消える）天井
+ * need   … below this the workload stops being practical
+ * enough … above this the difference stops being felt (= buying more is waste)
  *
- * スコアは data/parts.json と同じ出典（PassMark系）に揃える。混ぜると比較が壊れる。
+ * Scores use the same source as data/parts.json (PassMark family).
+ * Mixing sources would break every comparison.
+ *
+ * The need/enough numbers are editorial judgement from decades of building
+ * PCs, not an official spec — the UI says so in its footer.
  */
 
 export const WORKLOADS = {
   office: {
     id: 'office',
-    label: 'Web・動画視聴・Office（事務）',
-    labelEn: 'Web, video, office work',
+    label: 'Web, video, office work',
+    labelJa: 'Web・動画視聴・Office（事務）',
     cpu:  { need: 2500,  enough: 8000 },
     gpu:  { need: 0,     enough: 0,     integratedOk: true },
     ram:  { need: 8,     enough: 16 },
     storage: { ssdRequired: true, need: 256 },
-    note: '一番人が金を払いすぎる用途。CPUの余力より、SSDかどうかで体感が決まる。',
+    note: 'The workload people overpay for most. An SSD changes how it feels; spare CPU power does not.',
   },
 
   meeting: {
     id: 'meeting',
-    label: 'ビデオ会議（Zoom・Teams）',
-    labelEn: 'Video meetings',
+    label: 'Video meetings (Zoom, Teams)',
+    labelJa: 'ビデオ会議（Zoom・Teams）',
     cpu:  { need: 3500,  enough: 10000 },
     gpu:  { need: 0,     enough: 0,     integratedOk: true },
     ram:  { need: 8,     enough: 16 },
     storage: { ssdRequired: true, need: 256 },
-    note: '背景ぼかしでCPUを食うが、近年は内蔵GPU/NPUが処理する。専用GPUは不要。',
+    note: 'Background blur costs CPU, but recent integrated GPUs/NPUs handle it. A discrete GPU is unnecessary.',
   },
 
   photo: {
     id: 'photo',
-    label: '写真編集・RAW現像',
-    labelEn: 'Photo editing / RAW',
+    label: 'Photo editing / RAW',
+    labelJa: '写真編集・RAW現像',
     cpu:  { need: 6000,  enough: 20000 },
     gpu:  { need: 0,     enough: 4000,  integratedOk: true },
     ram:  { need: 16,    enough: 32 },
     storage: { ssdRequired: true, need: 512 },
-    note: 'メモリが効く。GPUは効くソフトと効かないソフトが分かれるので過剰投資しやすい。',
+    note: 'RAM is what helps. GPU acceleration depends on the app, which makes it easy to over-invest in.',
   },
 
   video_fhd: {
     id: 'video_fhd',
-    label: 'フルHD動画編集',
-    labelEn: '1080p video editing',
+    label: '1080p video editing',
+    labelJa: 'フルHD動画編集',
     cpu:  { need: 8000,  enough: 25000 },
     gpu:  { need: 2000,  enough: 9000,  integratedOk: true },
     ram:  { need: 16,    enough: 32 },
     storage: { ssdRequired: true, need: 512 },
-    note: 'ハードウェアエンコード（QSV/NVENC）が効くので、内蔵GPUでも実用になる場合が多い。',
+    note: 'Hardware encoders (QSV/NVENC) do the heavy lifting, so integrated graphics are often workable.',
   },
 
   video_4k: {
     id: 'video_4k',
-    label: '4K動画編集',
-    labelEn: '4K video editing',
+    label: '4K video editing',
+    labelJa: '4K動画編集',
     cpu:  { need: 15000, enough: 40000 },
     gpu:  { need: 6000,  enough: 20000, integratedOk: false },
     ram:  { need: 32,    enough: 64 },
     storage: { ssdRequired: true, need: 1024 },
-    note: '本当に4Kを常用するなら投資する価値がある数少ない用途。ただし「たまに」なら不要。',
+    note: 'One of the few workloads where spending is justified — if 4K is your daily format, not an occasional one.',
   },
 
   game_light: {
     id: 'game_light',
-    label: '軽いゲーム（VALORANT・Minecraft・原神）',
-    labelEn: 'Light gaming',
+    label: 'Light gaming (VALORANT, Minecraft, Genshin)',
+    labelJa: '軽いゲーム（VALORANT・Minecraft・原神）',
     cpu:  { need: 5000,  enough: 15000 },
     gpu:  { need: 1500,  enough: 8000,  integratedOk: true },
     ram:  { need: 8,     enough: 16 },
     storage: { ssdRequired: true, need: 512 },
-    note: '最新の内蔵GPU（Iris Xe / Radeon 780M）で普通に動く。ここでGPUを売られるのが最頻の過剰投資。',
+    note: 'Runs fine on recent integrated GPUs (Iris Xe / Radeon 780M). Being sold a GPU here is the most common overspend.',
   },
 
   game_fhd: {
     id: 'game_fhd',
-    label: 'フルHD 60fpsでゲーム',
-    labelEn: '1080p 60fps gaming',
+    label: '1080p 60fps gaming',
+    labelJa: 'フルHD 60fpsでゲーム',
     cpu:  { need: 8000,  enough: 22000 },
     gpu:  { need: 7000,  enough: 22000, integratedOk: false },
     ram:  { need: 16,    enough: 32 },
     storage: { ssdRequired: true, need: 512 },
-    note: 'フルHDならGPUの上位帯は完全に無駄になる。モニタの解像度を先に確認すべき用途。',
+    note: 'At 1080p the upper GPU tiers are pure waste. Check your monitor resolution before your GPU.',
   },
 
   game_4k: {
     id: 'game_4k',
-    label: '4K・高リフレッシュでゲーム',
-    labelEn: '4K / high-refresh gaming',
+    label: '4K / high-refresh gaming',
+    labelJa: '4K・高リフレッシュでゲーム',
     cpu:  { need: 15000, enough: 35000 },
     gpu:  { need: 20000, enough: 60000, integratedOk: false },
     ram:  { need: 16,    enough: 32 },
     storage: { ssdRequired: true, need: 1024 },
-    note: 'ここだけは上位GPUに意味がある。ただし4Kモニタを持っていることが前提。',
+    note: 'The one place a high-end GPU means something — assuming you actually own a 4K monitor.',
   },
 
   dev: {
     id: 'dev',
-    label: 'プログラミング・開発',
-    labelEn: 'Software development',
+    label: 'Software development',
+    labelJa: 'プログラミング・開発',
     cpu:  { need: 6000,  enough: 25000 },
     gpu:  { need: 0,     enough: 0,     integratedOk: true },
     ram:  { need: 16,    enough: 32 },
     storage: { ssdRequired: true, need: 512 },
-    note: 'メモリとSSDが効く。GPUはローカルLLMを回さない限り不要。',
+    note: 'RAM and an SSD are what matter. No GPU needed unless you run local LLMs.',
   },
 
   ai_local: {
     id: 'ai_local',
-    label: 'ローカルで生成AIを動かす',
-    labelEn: 'Local AI / LLM inference',
+    label: 'Local AI / LLM inference',
+    labelJa: 'ローカルで生成AIを動かす',
     cpu:  { need: 8000,  enough: 25000 },
     gpu:  { need: 10000, enough: 50000, integratedOk: false, vramNeed: 8, vramEnough: 24 },
     ram:  { need: 16,    enough: 64 },
     storage: { ssdRequired: true, need: 1024 },
-    note: 'VRAM容量が全て。GPUの速さよりVRAMが足りているかで動く/動かないが決まる。',
+    note: 'VRAM capacity is everything. Whether a model runs at all is decided by VRAM, not GPU speed.',
   },
 };
 
-/** 複数用途を選んだ場合は、各項目の最大値を取る（一番重い用途に合わせる） */
+/** When several workloads are picked, take the max of each requirement (fit the heaviest). */
 export function mergeRequirements(workloadIds) {
   const list = workloadIds.map(id => WORKLOADS[id]).filter(Boolean);
   if (!list.length) return null;
@@ -136,7 +141,7 @@ export function mergeRequirements(workloadIds) {
     gpu: {
       need: pick('gpu.need', Math.max),
       enough: pick('gpu.enough', Math.max),
-      // 1つでも専用GPU必須の用途があれば内蔵では不可
+      // If any picked workload requires a discrete GPU, integrated no longer qualifies
       integratedOk: list.every(w => w.gpu.integratedOk !== false),
       vramNeed: pick('gpu.vramNeed', Math.max),
       vramEnough: pick('gpu.vramEnough', Math.max),

@@ -18,19 +18,19 @@ const JSON_RULE =
   'No prose, no markdown fence, no explanation before or after.';
 
 function extractJson(text) {
-  if (!text) throw new Error('モデルの返答が空');
+  if (!text) throw new Error('The model returned an empty answer');
   // ```json ... ``` で包まれてきた場合に備える
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
   const body = (fenced ? fenced[1] : text).trim();
   const start = body.indexOf('{');
   const end = body.lastIndexOf('}');
-  if (start < 0 || end < 0) throw new Error(`JSONが見つからない: ${body.slice(0, 200)}`);
+  if (start < 0 || end < 0) throw new Error(`No JSON in the model's answer: ${body.slice(0, 200)}`);
   return JSON.parse(body.slice(start, end + 1));
 }
 
 /** 本番：Gemini API */
 export function geminiLlm(apiKey) {
-  if (!apiKey) throw new Error('GEMINI_API_KEY が無い');
+  if (!apiKey) throw new Error('GEMINI_API_KEY is not set');
   let client;
 
   async function getClient() {
@@ -50,7 +50,7 @@ export function geminiLlm(apiKey) {
     const res = await Promise.race([
       ai.interactions.create({ model: MODEL_ID, input }),
       new Promise((_, rej) => setTimeout(
-        () => rej(new Error(`モデルの応答が${timeoutMs / 1000}秒以内に返らなかった`)), timeoutMs).unref?.()),
+        () => rej(new Error(`The model did not answer within ${timeoutMs / 1000} seconds`)), timeoutMs).unref?.()),
     ]);
     return res.output_text ?? '';
   }
@@ -114,7 +114,7 @@ export function mockLlm(fixtures = {}) {
       };
     },
     async text() {
-      return fixtures.text ?? '[mock] 検証用の固定文。実際の推論はしていない。';
+      return fixtures.text ?? '[mock] Fixed placeholder text. No real inference happened.';
     },
   };
 }
@@ -126,6 +126,6 @@ export function autoLlm({ quiet = false } = {}) {
     if (!quiet) console.log(`[llm] Gemini (${MODEL_ID})`);
     return geminiLlm(key);
   }
-  if (!quiet) console.log('[llm] モック（GEMINI_API_KEY が未設定のため、推論はしていない）');
+  if (!quiet) console.log('[llm] mock (GEMINI_API_KEY not set — no real inference)');
   return mockLlm();
 }

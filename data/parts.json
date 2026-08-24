@@ -239,9 +239,9 @@
   "cpuName": "i3-12100",
   "cpuScore": 12505,
   "machineYen": 62500,
-  "label": "今売られている入門デスクトップ",
-  "detail": "PASOUL G-SLIM S2（Core i3-12100F / 8GB / 256GB SSD）",
-  "caveat": "販売機はCore i3-12100F。スコアは内蔵GPU以外が同一の i3-12100 のもの",
+  "label": "an entry-level desktop sold new today",
+  "detail": "PASOUL G-SLIM S2 (Core i3-12100F / 8GB / 256GB SSD)",
+  "caveat": "The machine ships with a Core i3-12100F; the score shown is the i3-12100, identical apart from integrated graphics.",
   "cpuSource": "https://www.cpubenchmark.net/CPU_mega_page.html",
   "priceSource": "https://kakaku.com/pc/desktop-pc/itemlist.aspx?pdf_Spec107=21"
  },
