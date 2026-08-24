@@ -68,6 +68,8 @@ place for one.
 
 ## The fleet
 
+![MOTTAINAI architecture](docs/architecture.svg)
+
 ```
 image ──▶ scan ──┐
                  ├──▶ resolve ──▶ verdict ──▶ narrate ──▶ answer

@@ -28,6 +28,10 @@ model call. Everything downstream of perception is ordinary code.
 
 ## The fleet
 
+![MOTTAINAI architecture — two Gemini perception agents join once into a deterministic judgment engine](docs/architecture.svg)
+
+The same flow as text:
+
 ```
               screenshots / photos (up to 4)      "I just browse and use Excel"
                               │                                  │

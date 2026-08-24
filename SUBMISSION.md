@@ -15,7 +15,21 @@
 | 構成図 | `ARCHITECTURE.md` | ✅ |
 | README（起動手順込み） | `README.md` | ✅ |
 | デモ動画 4分以内・英語または英語字幕 | 下の台本 | ⏸ |
+| 動画は**YouTubeかVimeoに公開アップ** | 提出時にアップ | ⏸ |
+| 動画に**未編集のライブ実行**を含める | 台本を待ちカット無しに修正済（下記） | ✅ |
+| **カテゴリ選択**（3択から1つ） | **Taskmaster推奨**（下記メモ）・最終決定は本人 | ⏸ |
 | 期間中に新規作成 | 2026-08-24 着手・全て新規 | ✅ |
+
+### ルール実物との照合（2026-08-25・rules頁を直接確認）
+
+- **カテゴリは3択**：①Taskmaster（人手介入なしの多段バックグラウンド処理＋自分の摩擦を解く"BYOF"）②Collaborative Partner（質問で導く・フィードバックで適応し続ける）③Enterprise Fleet（企業向け）。
+  **MOTTAINAIはTaskmaster が合う**＝スクショを渡した瞬間にフリートが自走して答えまで到達、チャットしない設計そのもの。Collaborative Partnerは「適応し続ける仕組み」が必要で、うちには無い。
+- **審査配点**：革新性・実用性40% ／ アーキテクチャ30% ／ デモ・再現性・ドキュメント30%（→構成図とREADMEの再現手順が直接採点対象）
+- **ボーナス最大+0.6**（Stage Two通過後に加点・スコアは1〜6）：
+  - 制作過程の公開記事/動画（+0.2）→ **note記事1本で取れる**（本人判断）
+  - `#AllThingsAgenticHackathon` 付きSNS投稿（+0.2）→ **X投稿1本で取れる**（本人判断）
+  - Gemma/Veo/Lyria等の追加Googleモデル統合（+0.2/個）→ 締切前の無理な増築はしない
+- リポジトリは**公開済みを確認**（makoto680/mottainai）＝審査用の権限付与は不要
 
 ## 本番環境
 
@@ -75,8 +89,10 @@ gcloud run services describe mottainai --region asia-northeast1
 > one reads what you actually do with the machine.
 > Then the verdict is computed. Not by a model — by ordinary, tested code."
 >
-> ⚠ 判定は15〜35秒かかる（Gemini側のテール遅延）。**待ちは録画でカットして
-> 「動き出し2〜3秒 → ジャンプ → 結果」でつなぐ**。リアルタイムで待たせない。
+> ⚠ 判定は15〜35秒かかる（Gemini側のテール遅延）が、**ルールが「未編集のライブ実行」を
+> 要求しているためカットしない**。待ち時間は[2:50]の設計思想の字幕をここに前倒しして埋める
+> ＝実行は途切れず映り続け、無言の待ちも生まれない。フリートのパネルが動いているので
+> 画面が止まって見えることもない。
 
 **[1:40–2:20] 結果**
 
@@ -98,7 +114,7 @@ gcloud run services describe mottainai --region asia-northeast1
 > And when an upgrade costs as much as a whole used machine, it says so,
 > and removes it from the total."
 
-**[2:50–3:15] 設計の芯**
+**[2:50–3:15] 設計の芯**（※字幕を実演①の待ち時間に前倒しした場合、ここは `npm test` の画面だけ残して短縮）
 
 > 画面：`core/verdict.js` を映し、`npm test` を流して **127 passed** を見せる
 >
@@ -127,7 +143,8 @@ gcloud run services describe mottainai --region asia-northeast1
   （TPMが映る画面を撮らせていないため）。この文言を録画に入れたいなら手入力デモで
   tpm=disabled を指定する。出ないのが正常であり、スクショ経路の見出しは
   「There is nothing to buy. Worst case, Windows 11 asks for one free BIOS setting.」
-- 判定は15〜35秒。録画は待ちカット前提で構成する
+- 判定は15〜35秒。**「未編集のライブ実行」が要件＝待ちはカットせず**、その間に設計思想の字幕を流す（台本参照）
+- 完成した動画は**YouTubeかVimeoに公開**でアップしてURLを提出フォームに貼る
 
 ## 動画で必ず映すもの（要件）
 
