@@ -40,15 +40,25 @@ function indexByModel(list) {
   const map = new Map();
   const add = (key, label) => { if (key && !map.has(key)) map.set(key, label); };
   for (const e of list.entries) {
+    // Qualcomm rows repeat the brand inside the model ("Snapdragon" + "Snapdragon 7c+
+    // Gen 3"); joining blindly doubles it into a key no real name can produce.
     const full = e.brand && e.brand !== 'AMD' && e.brand !== e.manufacturer
+                 && !String(e.model).toLowerCase().startsWith(String(e.brand).toLowerCase())
       ? `${e.brand} ${e.model}`
       : e.model;
     const label = `${e.manufacturer} ${full}`.replace(/\s+/g, ' ').trim();
     add(norm(full), label);
     add(norm(label), label);
     // Microsoft writes some rows longer than the name anyone actually uses:
-    // "Ryzen 5 3500 Processor", "Ryzen 3 3200G with Radeon Vega 8 Graphics".
-    const short = full.replace(/\s+with\s+.*$/i, '').replace(/\s+processors?$/i, '').trim();
+    // "Ryzen 5 3500 Processor", "Ryzen 3 3200G with Radeon Vega 8 Graphics",
+    // "5300G (OEM Only)", "3580U Microsoft Surface Edition". A decoration on the
+    // list side must not hide the part from the name PassMark prints.
+    const short = full
+      .replace(/\s+with\s+.*$/i, '')
+      .replace(/\s+processors?$/i, '')
+      .replace(/\s*\(OEM Only\)/i, '')
+      .replace(/\s+Microsoft Surface Edition/i, '')
+      .trim();
     add(norm(short), label);
   }
   return map;
@@ -89,7 +99,10 @@ const AMD_NUMBER_SIBLINGS = (() => {
   const map = new Map();
   for (const e of AMD.entries) {
     const tier = String(e.brand ?? '').match(/^Ryzen [3579]/i)?.[0];
-    const digits = String(e.model).match(/\b(\d{4})\b/)?.[1];
+    // No trailing boundary: "5600X" and "2600E" carry their number against the
+    // suffix, and requiring \b after the digits had silently shrunk this index to
+    // the bare-numbered models — 24 rows instead of the list's 238 Ryzen entries.
+    const digits = String(e.model).match(/(\d{4})/)?.[1];
     if (!tier || !digits) continue;
     const key = norm(`${tier} ${digits}`);
     if (!map.has(key)) map.set(key, []);
@@ -116,11 +129,20 @@ const hasSeries = name => INTEL_SERIES.has(name) ? name : null;
 const INTEL_CORE_GENS = (() => {
   const gens = [];
   for (const model of INTEL_SERIES) {
+    // Only Core-branded entries carry a Core generation. "2nd Generation Xeon
+    // Scalable Processors" also matches a bare ordinal regex, and letting it in
+    // once dragged the floor down to 2 — telling 3rd-gen Core owners their CPU
+    // sat inside a range the list actually covers.
+    if (!/Generation Core (i[3579]|m)\b/i.test(model)) continue;
     const m = model.match(/(\d+)(?:st|nd|rd|th) Generation/i);
     if (m) gens.push(Number(m[1]));
   }
   return { min: Math.min(...gens), max: Math.max(...gens) };
 })();
+
+const ordinal = n => (n % 100 >= 11 && n % 100 <= 13)
+  ? `${n}th`
+  : `${n}${['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'}`;
 
 const AMD_RYZEN_SERIES = (() => {
   const series = [];
@@ -175,10 +197,20 @@ function matchIntel(raw) {
   const src = INTEL.source;
   const s = raw.replace(/\s+/g, ' ').trim();
 
-  // Core Ultra — every Series 1/2/3 part is listed.
+  // Core Ultra — Series 1/2/3 are all listed. Cite the series the model number
+  // actually belongs to (1xx / 2xx / 3xx), not just the first entry.
   if (/core\s+ultra/i.test(s)) {
-    const hit = hasSeries('Core Ultra Processors (Series 1)');
-    return answer(true, hit, 'Core Ultra parts are listed by series', src);
+    const m = s.match(/ultra\s*[3579]\s*(\d)\d{2}/i);
+    const series = m ? Number(m[1]) : null;
+    if (series) {
+      const hit = hasSeries(`Core Ultra Processors (Series ${series})`);
+      if (hit) return answer(true, hit, `read as Core Ultra Series ${series}`, src);
+      // A series number the list has no entry for — a Series 4 will exist before
+      // the list does. Same shape as Ryzen 9000: later than the list, not excluded.
+      return UNKNOWN(`read as Core Ultra Series ${series}, which this list has no entry for yet`);
+    }
+    return answer(true, hasSeries('Core Ultra Processors (Series 1)'),
+      'Core Ultra parts are listed by series', src);
   }
 
   // Core 3/5/7/9 without the "i" (Series 1 / Series 2, e.g. "Core 7 150U").
@@ -204,17 +236,19 @@ function matchIntel(raw) {
     if (hit) return answer(true, hit, `read as Intel Core ${gen}th generation`, src);
     if (gen > INTEL_CORE_GENS.max) {
       return UNKNOWN(
-        `read as Intel Core ${gen}th generation, past the ${INTEL_CORE_GENS.max}th generation ` +
+        `read as Intel Core ${ordinal(gen)} generation, past the ${ordinal(INTEL_CORE_GENS.max)} generation ` +
         `where this list stops — later than the list reaches, not excluded by it`,
       );
     }
     return answer(false, null,
-      `read as Intel Core ${gen}th generation; the list starts at the ` +
-      `${INTEL_CORE_GENS.min}th and does not include it`, src);
+      `read as Intel Core ${ordinal(gen)} generation; the list starts at the ` +
+      `${ordinal(INTEL_CORE_GENS.min)} and does not include it`, src);
   }
 
   // Celeron — series named by the leading digit, with an optional letter prefix.
-  const celeron = s.match(/\bceleron\s+([A-Za-z]?)(\d)(\d{3})\b/i);
+  // Suffixed models (N4000C, 6305E) belong to the same series as their base number,
+  // so the match must not require a word boundary right after the digits.
+  const celeron = s.match(/\bceleron\s+([A-Za-z]?)(\d)(\d{3})[A-Za-z]*/i);
   if (celeron) {
     const prefix = (celeron[1] || '').toUpperCase();
     const series = `Celeron ${prefix}${celeron[2]}000 Series`;
@@ -223,31 +257,75 @@ function matchIntel(raw) {
     return answer(false, null, `read as "${series}", which is not on the list`, src);
   }
 
-  // Pentium Gold / Silver / plain, same series shape.
-  const pentium = s.match(/\bpentium\s+(gold|silver)?\s*([A-Za-z]?)(\d)(\d{3})([A-Za-z]*)/i);
+  // Pentium. PassMark often drops the "Gold" that Microsoft writes ("Pentium 4417U"
+  // vs listed "Pentium Gold 4000U Series"), so every brand spelling is tried, and the
+  // series stem is tried at both the thousands ("Pentium Gold 7000 Series") and the
+  // hundreds ("Pentium 6800 Series") — the list itself uses both granularities.
+  const pentium = s.match(/\bpentium\s+(gold|silver)?\s*([A-Za-z]?)(\d)(\d)(\d{2})([A-Za-z]*)/i);
   if (pentium) {
-    const brand = pentium[1] ? pentium[1][0].toUpperCase() + pentium[1].slice(1).toLowerCase() : null;
+    const given = pentium[1] ? pentium[1][0].toUpperCase() + pentium[1].slice(1).toLowerCase() : null;
     const prefix = (pentium[2] || '').toUpperCase();
-    const lead = pentium[3];
-    const tail = (pentium[5] || '').toUpperCase();
-    const stems = brand
-      ? [`Pentium ${brand} ${prefix}${lead}000${tail} Series`, `Pentium ${brand} ${prefix}${lead}000 Series`]
-      : [`Pentium ${prefix}${lead}${pentium[4]} Series`, `Pentium ${prefix}${lead}000 Series`];
+    const d1 = pentium[3], d2 = pentium[4];
+    const tail = (pentium[6] || '').toUpperCase();
+    const brands = given ? [given] : ['', 'Gold', 'Silver'];
+    const stems = [];
+    for (const b of brands) {
+      const head = b ? `Pentium ${b} ` : 'Pentium ';
+      for (const num of [`${d1}000`, `${d1}${d2}00`]) {
+        if (tail) stems.push(`${head}${prefix}${num}${tail} Series`);
+        stems.push(`${head}${prefix}${num} Series`);
+      }
+    }
     const hit = stems.map(hasSeries).find(Boolean);
     if (hit) return answer(true, hit, 'matched the Pentium series', src);
-    return answer(false, null, `read as "${stems[0]}", which is not on the list`, src);
+
+    // Sibling-prefix gap: "Pentium Silver N5030" finds no N5000 entry, but the same
+    // brand's J5000 — the desktop half of the same Gemini Lake family — is listed.
+    // A family listed under one prefix and absent under the other is the list being
+    // uneven, not a ruling, so it resolves to unknown. The probe is deliberately
+    // narrow (same brand, same thousands number, tailless): Pentium G4560 stays a
+    // clean false because no 'Pentium 4000'-shaped sibling exists under any prefix.
+    if (prefix) {
+      for (const b of brands) {
+        const head = b ? `Pentium ${b} ` : 'Pentium ';
+        for (const other of ['J', 'N', 'G']) {
+          if (other === prefix) continue;
+          const sibling = hasSeries(`${head}${other}${d1}000 Series`);
+          if (sibling) {
+            return UNKNOWN(
+              `the list carries "${sibling}" but has no ${prefix}${d1}000 entry — ` +
+              `the same family under another prefix, so absence here is a gap, not a ruling`,
+            );
+          }
+        }
+      }
+    }
+    return answer(false, null,
+      `read as the Pentium ${prefix}${d1}${d2}00 family, and no spelling of that series is on the list`, src);
   }
 
   // Intel Processor N-series and U300 (the current budget line).
+  //
+  // The list names series, and the members do not share the series' number:
+  // "N90 Series" contains N95 and N97 and nothing literally called N90. A prefix
+  // test can therefore never reach that entry, and an earlier version told N95/N97
+  // owners — faster chips than the listed N100 — that Windows 11 was off the table.
   const nSeries = s.match(/\bintel\b[^a-z0-9]*\b(N\d{2,3}|U300)\b/i);
   if (nSeries) {
     const model = nSeries[1].toUpperCase();
-    const hit = ['N100', 'N200', 'N300', 'N90']
-      .filter(p => model.startsWith(p))
-      .map(p => hasSeries(`${p} Series`)).find(Boolean)
-      ?? (model === 'U300' ? hasSeries('U300 series') : null);
-    if (hit) return answer(true, hit, 'matched the Intel Processor series', src);
-    return answer(false, null, `read as Intel Processor "${model}", which is not on the list`, src);
+    if (model === 'U300') {
+      return answer(true, hasSeries('U300 series'), 'matched the Intel Processor series', src);
+    }
+    const series =
+      /^N9\d$/.test(model) ? 'N90 Series'
+      : model === 'N100' ? 'N100 Series'
+      : model === 'N200' ? 'N200 Series'
+      : null;
+    const hit = series && hasSeries(series);
+    if (hit) return answer(true, hit, `${model} belongs to the listed ${series}`, src);
+    // N150, N250, N350… postdate every N-series entry here. Absence is the list
+    // stopping, not a ruling — same shape as Ryzen 9000.
+    return UNKNOWN(`read as Intel Processor "${model}", which none of the list's N-series entries cover`);
   }
 
   // Atom — only the X7000 series is listed.
@@ -259,7 +337,7 @@ function matchIntel(raw) {
     return answer(false, null, `read as "${series}", which is not on the list`, src);
   }
 
-  if (/\bxeon\b/i.test(s)) return UNKNOWN('Xeon series mapping is not implemented');
+  if (/\bxeon\b/i.test(s)) return matchXeon(s);
 
   // Anything clearly pre-dating the list: Core 2, Pentium 4/D, Celeron Dual-Core.
   if (PRE_LIST_INTEL.test(s)) {
@@ -269,6 +347,68 @@ function matchIntel(raw) {
   return UNKNOWN(`could not read an Intel family out of "${raw}"`);
 }
 
+/**
+ * Xeon. 1,449 of the table's rows are Xeons, and most of them are exactly the old
+ * server pulls that flood the second-hand market — leaving them all "unknown" would
+ * hide the honest answer for the people most likely to have been sold one.
+ *
+ * The list names Xeon series at several granularities, so each family maps its model
+ * number onto the list's own spelling. Scalable generations are carried by the
+ * hundreds digit of the model (Gold 6248 → x2xx → 2nd Generation); W/E/D series zero
+ * the last two digits (E-2278G → E-2200 Series). E3/E5/E7 and the 2006-era number-only
+ * parts ended before the list's floor — their absence is a decision, so they are false.
+ */
+function matchXeon(s) {
+  const src = INTEL.source;
+
+  // Xeon W: classic "W-1290P" / mobile "W-10855M" / new lowercase "w5-2455X".
+  const w = s.match(/\bxeon\s+w[357]?-?(\d{4,5})([A-Za-z]*)/i);
+  if (w) {
+    const digits = w[1];
+    const series = digits.length === 5
+      ? `W-${digits.slice(0, 2)}000M Series`             // W-10855M → W-10000M
+      : `W-${digits.slice(0, 2)}00 Series`;              // W-1290P → W-1200, w5-2455X → W-2400
+    const hit = hasSeries(`Xeon ${series}`);
+    if (hit) return answer(true, hit, 'matched the Xeon W series', src);
+    return answer(false, null, `read as Xeon ${series}, which is not on the list`, src);
+  }
+
+  // Xeon Scalable: Bronze/Silver/Gold/Platinum + 4 digits; hundreds digit = generation.
+  const sc = s.match(/\bxeon\s+(bronze|silver|gold|platinum)\s+(\d)(\d)(\d{2})/i);
+  if (sc) {
+    const gen = Number(sc[3]);
+    const series = gen === 1
+      ? 'Xeon Scalable Processors'
+      : `${ordinal(gen)} Generation Xeon Scalable Processors`;
+    const hit = hasSeries(series);
+    if (hit) return answer(true, hit, `read as ${ordinal(gen)} generation Xeon Scalable`, src);
+    return UNKNOWN(`read as a generation of Xeon Scalable this list has no entry for`);
+  }
+
+  // Xeon E / D with the modern dash naming (E-2278G, D-1736NT).
+  const ed = s.match(/\bxeon\s+([ED])-(\d)(\d{3})/i);
+  if (ed) {
+    const series = `Xeon ${ed[1].toUpperCase()}-${ed[2]}${ed[3].slice(0, 1)}00 Series`;
+    const hit = hasSeries(series);
+    if (hit) return answer(true, hit, `matched the ${series}`, src);
+    return answer(false, null, `read as ${series}, which is not on the list`, src);
+  }
+
+  // The lines that ended before the list's floor: E3/E5/E7-xxxx (any v-revision),
+  // and the X/L/W/E-prefixed or number-only parts of the 2006-2012 era.
+  if (/\bxeon\s+E[357]-\d{4}/i.test(s) || /\bxeon\s+[XLEW]\d{4}\b/i.test(s)
+      || /\bxeon\s+[357]\d{3}\b/i.test(s) || /\bxeon\s+(MP|MV)\b/i.test(s)) {
+    return answer(false, null, 'a Xeon line that ended before the generations this list carries', src);
+  }
+
+  // Xeon 6 (6740E / 6980P) has no plain entry on this copy of the list.
+  if (/\bxeon\s+6\d{3}[EP]?\b/i.test(s)) {
+    return UNKNOWN('read as a Xeon 6 part, which this copy of the list has no entry for');
+  }
+
+  return UNKNOWN(`could not read a Xeon family out of "${s}"`);
+}
+
 function matchAmd(raw) {
   const src = AMD.source;
   // Strip the marketing prefix and any clock speed PassMark appends.
@@ -276,10 +416,26 @@ function matchAmd(raw) {
   const direct = AMD_MODELS.get(norm(cleaned));
   if (direct) return answer(true, direct, 'exact match on the AMD list', src);
 
-  // PassMark sometimes carries a suffix the list does not ("Ryzen 5 5600G with Radeon Graphics").
-  const trimmed = cleaned.replace(/\s+with\s+.*$/i, '').trim();
+  // PassMark decorates some names beyond what the list writes: "with Radeon Graphics",
+  // "Creator Edition", a trailing "Mobile". Decorations describe the same silicon.
+  const trimmed = cleaned
+    .replace(/\s+with\s+.*$/i, '')
+    .replace(/\s+Creator Edition$/i, '')
+    .replace(/\s+Mobile$/i, '')
+    .trim();
   const viaTrim = AMD_MODELS.get(norm(trimmed));
   if (viaTrim) return answer(true, viaTrim, 'exact match on the AMD list', src);
+
+  // Mirror of AMD_PRO_ONLY: the query is the PRO variant and only the plain part is
+  // listed ("Ryzen 7 PRO 4700G" vs listed "Ryzen 7 4700G"). Same silicon, different
+  // management SKU — the honest answer is unknown, exactly as in the other direction.
+  if (/\bPRO\b/i.test(trimmed)) {
+    const plain = trimmed.replace(/\s*\bPRO\b\s*/i, ' ').replace(/\s+/g, ' ').trim();
+    const plainHit = AMD_MODELS.get(norm(plain));
+    if (plainHit) {
+      return UNKNOWN(`the list carries "${plainHit}" but not this PRO version of the same model number`);
+    }
+  }
 
   const proOnly = AMD_PRO_ONLY.get(norm(trimmed)) ?? AMD_PRO_ONLY.get(norm(cleaned));
   if (proOnly) {

@@ -25,8 +25,20 @@ const norm = s => String(s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
  * Celeron・Pentium・Atom・Athlonが丸ごとゼロで、そこは安いノートの主戦場にあたる。
  * 引けない型番は「判定できない」ではなく「この道具は使えない」と同じ意味になる。
  */
-const vendorCpu = JSON.parse(fs.readFileSync(path.join(VENDOR, 'passmark_cpu_full.json'), 'utf8')).data;
+const vendorCpuAll = JSON.parse(fs.readFileSync(path.join(VENDOR, 'passmark_cpu_full.json'), 'utf8')).data;
 const vendorGpu = JSON.parse(fs.readFileSync(path.join(VENDOR, 'passmark_gpu_full.json'), 'utf8')).data;
+
+/**
+ * 判定の対象にならない行を先に落とす。
+ *
+ * - cpuCount>1: 同じ基板にCPUを2個載せた構成の実測で、スコアが2個分。名前は1個の時と
+ *   同じなので、検索に引かれると「持っているCPUの倍の速さ」を根拠に判定してしまう。
+ * - Virtual/QEMU/KVM: 仮想マシンの実測。部品ではないので、助言の根拠になれない。
+ */
+const droppedMulti = vendorCpuAll.filter(c => Number(c.cpuCount) > 1).length;
+const droppedVirtual = vendorCpuAll.filter(c => /virtual|qemu|kvm|vmware/i.test(c.name)).length;
+const vendorCpu = vendorCpuAll.filter(c =>
+  !(Number(c.cpuCount) > 1) && !/virtual|qemu|kvm|vmware/i.test(c.name));
 
 const CPU_SOURCE = 'https://www.cpubenchmark.net/CPU_mega_page.html';
 const GPU_SOURCE = 'https://www.videocardbenchmark.net/GPU_mega_page.html';
@@ -47,13 +59,24 @@ const vendorOf = name =>
   : /radeon/i.test(name) ? 'AMD'
   : null;
 
-/** "Intel Core i5-8250U @ 1.60GHz" → "i5-8250U"。人が口にする形に寄せる。 */
+/**
+ * "Intel Core i5-8250U @ 1.60GHz" → "i5-8250U"。人が口にする形に寄せる。
+ *
+ * ただしベンダー名を削った結果が総称語だけになるなら、削らずに元の名前を保つ。
+ * 「Intel Graphics」を「Graphics」にすると、その1語が他の名前の部分一致を
+ * 総取りする吸い込み口になる（Iris Xe Graphics がここに化けた実害あり）。
+ */
 function shortName(full) {
-  return String(full)
+  const stripped = String(full)
     .replace(/@.*$/, '')
     .replace(/^(Intel|AMD|Qualcomm|NVIDIA)\s+/i, '')
     .replace(/^Core\s+(?=i[3579]\b)/i, '')
     .trim();
+  const generic = /^(graphics|xeon|celeron|pentium|atom|ryzen|radeon|geforce)$/i;
+  if (!stripped || generic.test(stripped)) {
+    return String(full).replace(/@.*$/, '').trim();
+  }
+  return stripped;
 }
 
 /**
@@ -86,6 +109,7 @@ const cpusRaw = vendorCpu.map(c => {
     year: yearOf(c.date),
     win11: w.supported,
     win11Basis: { matchedBy: w.matchedBy, reason: w.reason, source: w.source },
+    samples: num(c.samples),             // 実測の提出数。検索の並びと幽霊行の見分けに使う
     source: CPU_SOURCE,
     aliases: [short, c.name, `Core ${short}`, `${vendor} ${short}`]
       .filter(Boolean).map(norm),
@@ -93,23 +117,63 @@ const cpusRaw = vendorCpu.map(c => {
 }).filter(c => c.score != null);
 
 /**
- * 「リストに載っていない」の扱いは win11_match.js 側が持つ。
+ * 幽霊行を落とす。
  *
- * 最初は発売日で線を引こうとしたが、これは誤りだった。Ryzen 5 7640S のように
- * 古い世代の後出しモデルが2026年に登録されていて、線が未来に飛ぶ。
- * 正しい軸は日付ではなく、リストが覆っている世代の範囲そのもの。
+ * PassMarkには「Intel Core i9-9900K」が2行ある。片方は samples=1・1コア・2,128点、
+ * もう片方は samples=18,027・8コア・18,038点。前者は誰かの壊れた1回分の提出で、
+ * 名前検索がこれを掴むと、実在の8コア機に「CPUを買い替えろ」と言うことになる。
+ * 見分けはPassMark自身の提出数：同名の行に提出数が桁違い（50倍以上）の相手がいて、
+ * 自分の提出数が5以下なら、それは部品ではなく事故。
+ *
+ * （「リストに載っていない」の扱いは win11_match.js 側が持つ。発売日で線を引くのは
+ *   誤りだった：古い世代の後出しモデルが2026年に登録されていて線が未来に飛ぶ。）
  */
-const cpus = cpusRaw;
+const byName = new Map();
+for (const c of cpusRaw) {
+  const k = norm(c.name);
+  if (!byName.has(k)) byName.set(k, []);
+  byName.get(k).push(c);
+}
+let droppedPhantom = 0;
+const cpus = cpusRaw.filter(c => {
+  const group = byName.get(norm(c.name));
+  if (group.length < 2) return true;
+  const maxSamples = Math.max(...group.map(g => g.samples ?? 0));
+  const phantom = (c.samples ?? 0) <= 5 && maxSamples >= 50 * Math.max(1, c.samples ?? 0);
+  if (phantom) droppedPhantom++;
+  return !phantom;
+});
 
 /**
  * 内蔵グラフィックの見分け。PassMarkの bus 列は3,013件中9件しか "Integrated" と
  * 書いていないので、これだけでは使えない。名前で見分けたうえで、
  * どちらで判断したかを integratedBasis に残す。判断の出どころが消えると検算できない。
+ *
+ * 両方向に実害があった見分けなので、族ごとに明示する：
+ *  - "Intel HD 4000"（Graphicsの語なし）が228件、検出から漏れて「外付け扱い」だった
+ *    → ノート持ちに買えないグラボの買い替えを迫る向きの誤り
+ *  - "Radeon 520/530/540…"（無印3桁）はディスクリートなのに内蔵扱いだった
+ *    → 逆向きの誤り。内蔵扱いは M サフィックス（610M/780M等・APU内蔵）だけにする
+ *  - Vega は 3〜11 がAPU内蔵、56/64/VII がディスクリート。数字で分ける
+ *  - Arc は 130V/140V/130T/140T（Lunar/Arrow Lake内蔵）だけが内蔵。A/B系は外付け
  */
-const IGPU_NAME = /\b(HD Graphics|UHD Graphics|Iris|Vega \d|Radeon Graphics|Radeon \d{3}M?\b|Graphics \d{3})\b/i;
+const IGPU_PATTERNS = [
+  { re: /\bHD Graphics\b|\bUHD Graphics\b/i, why: 'Intel HD/UHD Graphics family' },
+  { re: /^Intel (HD|UHD) \d{3,4}\b/i, why: 'Intel HD/UHD shorthand family' },
+  { re: /\bIris\b/i, why: 'Intel Iris family' },
+  { re: /\bGraphics \d{3}\b/i, why: 'Intel Graphics NNN family' },
+  { re: /^Intel Graphics$/i, why: 'Intel generic iGPU entry' },
+  { re: /\bArc 1[34]0[VT]\b/i, why: 'Intel Arc integrated tier (V/T)' },
+  { re: /\bRadeon Graphics\b/i, why: 'AMD APU generic iGPU entry' },
+  { re: /\bRadeon \d{3}M\b/i, why: 'AMD RDNA iGPU (M suffix)' },
+  { re: /\bVega (3|5|6|7|8|9|10|11)\b/i, why: 'AMD APU Vega tier (3-11)' },
+  { re: /\bAdreno\b/i, why: 'Qualcomm Adreno (SoC graphics)' },
+];
 function integratedOf(g) {
   if (g.bus === 'Integrated') return { integrated: true, basis: 'PassMark bus column' };
-  if (IGPU_NAME.test(g.name)) return { integrated: true, basis: 'integrated-graphics family name' };
+  const full = String(g.name);
+  const hit = IGPU_PATTERNS.find(p => p.re.test(full));
+  if (hit) return { integrated: true, basis: hit.why };
   return { integrated: false, basis: null };
 }
 
@@ -130,6 +194,7 @@ const gpus = vendorGpu.map(g => {
     releasedOn: textOr(g.date),
     year: yearOf(g.date),
     formFactor: textOr(g.cat) === 'Unknown' ? null : textOr(g.cat),
+    samples: num(g.samples),
     source: GPU_SOURCE,
     aliases: [short, g.name, `${vendor} ${short}`].filter(Boolean).map(norm),
   };
@@ -276,6 +341,7 @@ const igpu = gpus.filter(g => g.integrated).length;
 const w = k => cpus.filter(c => c.win11 === k).length;
 console.log(`parts.json 生成`);
 console.log(`  CPU ${cpus.length}件  Win11: 対応 ${w(true)} / 非対応 ${w(false)} / リスト外・判定不能 ${w(null)}`);
+console.log(`  除外: 2個構成 ${droppedMulti} / 仮想マシン ${droppedVirtual} / 幽霊行 ${droppedPhantom}`);
 console.log(`  GPU ${gpus.length}件（内蔵 ${igpu}）`);
 console.log(`  ストレージ候補 ${storageOptions.length}件: ${storageOptions.map(o => `${o.gb}GB/${o.yen.toLocaleString()}円`).join(', ') || 'なし'}`);
 console.log(`  メモリ候補 ${memoryOptions.length}件: ${memoryOptions.map(o => `${o.gb}GB/${o.yen.toLocaleString()}円`).join(', ') || 'なし'}`);
