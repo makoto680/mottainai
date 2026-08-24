@@ -121,6 +121,27 @@ function buildResolver(parts, strip) {
       return hold('contains-ambiguous', tied, cleaned);
     }
 
+    // 2b) The row's name contains the whole input — "GTX 1070 Ti" inside
+    //     "GeForce GTX 1070 Ti". People and screenshots routinely drop the brand.
+    //     Accept ONLY when everything the row adds beyond the input is brand fluff:
+    //     "GeForce" may be elided, a trailing "Ti"/"Super"/"XT" may not — those name
+    //     a different product, and picking across them is exactly the mis-resolution
+    //     this module exists to refuse.
+    if (n.length >= 4 && /\d/.test(n)) {
+      const BRAND_FLUFF = /(nvidia|geforce|quadro|amd|ati|radeon|intel|arc|core|ryzen|athlon|pentium|celeron|xeon|apple|qualcomm|snapdragon|gtx|rtx|rx)/g;
+      const within = rows.filter(r =>
+        r.nameKey.includes(n) && !r.nameKey.replace(n, '').replace(BRAND_FLUFF, '').length);
+      if (within.length === 1) {
+        return { picked: within[0].part, basis: 'brand-elided', candidates: [], cleaned };
+      }
+      if (within.length > 1) {
+        if (sameSilicon(within)) {
+          return { picked: within[0].part, basis: 'brand-elided-duplicate-rows', candidates: [], cleaned };
+        }
+        return hold('brand-elided-ambiguous', within, cleaned);
+      }
+    }
+
     // 3) Nothing. Offer near misses (shared model-number token) for a human to pick from.
     const tokens = (n.match(/[a-z]?\d{3,5}[a-z]{0,3}\d?/g) ?? []).filter(t => t.length >= 4);
     const near = tokens.length
