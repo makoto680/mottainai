@@ -4,3 +4,10 @@ node_modules
 _t*.mjs
 _probe*.mjs
 *.bat
+
+# 撮影素材はサーバーに要らない。入れるとイメージが太るだけで、
+# 実際これが混ざった状態で Cloud Run の取り込みが失敗した。
+recordings/
+*.mp4
+*.mkv
+*.srt

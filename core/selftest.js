@@ -170,15 +170,27 @@ console.log('\n[6] Windows 11：BIOS設定だけで解決するケースを最�
     w2.alternatives[w2.alternatives.length - 1].label.includes('買い替え'));
 }
 
-console.log('\n[7] 余力年数は単調増加し、上限で頭打ちになる');
+console.log('\n[7] 余力は検算できる倍率で示す（年数に変換しない）');
 {
+  // 「あと何年使える」は出典の無い前提を1つ挟むうえ、勝手な上限で頭打ちにしていた。
+  // 倍率なら実測スコア ÷ 必要ラインでしかなく、読む側がその場で確かめられる。
   const m = s => ({ cpu: { score: s, win11: true }, gpu: { score: 0 }, ramGB: 16,
                     storage: { type: 'ssd', gb: 512 }, tpm: 'enabled', secureBoot: true });
-  const a = judge(m(3000), ['office']).parts.cpu.headroomYears;
-  const b = judge(m(6000), ['office']).parts.cpu.headroomYears;
-  const c = judge(m(999999), ['office']).parts.cpu.headroomYears;
-  check('性能が高いほど余力年数が長い', b > a, `(${a} → ${b})`);
-  check('余力年数は10年で頭打ち', c === 10, `(${c})`);
+  const need = WORKLOADS.office.cpu.need;
+
+  const a = judge(m(need * 2), ['office']).parts.cpu;
+  check('倍率が実際の割り算と一致する', a.ratio === 2, `(${a.ratio})`);
+  check('倍率が文章にも出る', /2\.0倍/.test(a.headroom ?? ''), `(${a.headroom})`);
+
+  const b = judge(m(need * 50), ['office']).parts.cpu;
+  check('極端な値は「10倍以上」とだけ言う', /10倍以上/.test(b.headroom ?? ''), `(${b.headroom})`);
+
+  const c = judge(m(need - 1), ['office']).parts.cpu;
+  check('足りていない時は余力を示さない', c.headroom === null);
+
+  // 年数を名乗るフィールドが復活していないこと（同じ間違いを繰り返さないための番人）
+  check('年数のフィールドは持たない', !('headroomYears' in a));
+  console.log(`       → "${a.headroom}"`);
 }
 
 console.log('\n[8] 「0円」と言えるのは本当に他の出費が無い時だけ');

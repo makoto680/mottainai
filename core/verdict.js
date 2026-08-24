@@ -69,15 +69,20 @@ function classify(ratio, enoughRatio) {
 }
 
 /**
- * 「あと何年戦えるか」の目安。
- * 必要スペックは年あたりおよそ8%上がるという前提を置き、余裕がそれを何年吸収できるかで出す。
- * 正確な予言ではなく桁感を示すための数字なので、UI側でも「目安」と明示すること。
+ * 余力は「必要量の何倍あるか」で表す。年数には変換しない。
+ *
+ * 以前はここで「あと何年使えるか」を出していた。年8%ずつ必要スペックが上がるという
+ * 前提を置いた式だったが、その8%には出典が無く、しかも出た値を上限10年で頭打ちにしていた。
+ * 結果として画面の「あと約10年」は「勝手に決めた天井に当たった」以上の意味を持たず、
+ * 数字の形をしているぶん、根拠があるかのように読めてしまっていた。
+ *
+ * 倍率なら、実測ベンチ（出典あり）と用途ごとの必要ライン（編集判断だと画面に明示）の
+ * 割り算でしかなく、読む側がそのまま検算できる。
  */
-const YEARLY_CREEP = 1.08;
-function yearsOfHeadroom(ratio) {
-  if (ratio < 1) return 0;
-  const years = Math.log(ratio) / Math.log(YEARLY_CREEP);
-  return Math.max(0, Math.min(10, Math.round(years * 10) / 10));
+function headroomLabel(ratio) {
+  if (!isFinite(ratio) || ratio < 1) return null;
+  if (ratio >= 10) return 'この用途の必要ラインの10倍以上ある';
+  return `この用途の必要ラインの約${ratio.toFixed(1)}倍ある`;
 }
 
 function judgeScored(current, req, label, opts = {}) {
@@ -85,7 +90,7 @@ function judgeScored(current, req, label, opts = {}) {
   if (!req.need) {
     return {
       key: label, status: STATUS.KEEP, required: 0, current,
-      headroomYears: null,
+      headroom: null,
       verdict: 'この用途では性能を問われない項目。今のままでいい。',
     };
   }
@@ -99,7 +104,7 @@ function judgeScored(current, req, label, opts = {}) {
     required: req.need,
     enough: req.enough,
     ratio: Math.round(ratio * 100) / 100,
-    headroomYears: yearsOfHeadroom(ratio),
+    headroom: headroomLabel(ratio),
     currentLabel: formatter(current),
     requiredLabel: formatter(req.need),
   };

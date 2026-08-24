@@ -336,7 +336,7 @@ function render(d){
     <tr><th>部位</th><th>今</th><th>判定</th><th></th></tr>`;
   const LBL = {KEEP:'替えなくていい', TIGHT:'余裕は薄い', OVERKILL:'余りすぎ', BLOCKER:'ここだけ足りない'};
   for(const [k,p] of Object.entries(v.parts)){
-    let note = p.verdict ?? (p.headroomYears ? `この用途ならあと約${p.headroomYears}年は足りる目安` : '');
+    let note = p.verdict ?? p.headroom ?? '';
     if(p.fixWith){
       note += `<br><b style="color:var(--fix)">${escapeHtml(p.fixWith.label ?? '')} ${p.fixWith.yen?yen(p.fixWith.yen):''}</b>`;
       if(p.fixNote) note += `<br>${escapeHtml(p.fixNote)}`;
