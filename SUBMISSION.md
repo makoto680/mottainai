@@ -160,6 +160,61 @@ ADK の静的グラフは入ってくる辺の数だけ下流ノードを起動�
 **What's next**
 日本語のPC比較サイトとして常設し、型番データを継続更新する。
 
+## 提出フォーム英文版（そのまま貼れる形・2026-08-25）
+
+**Inspiration**
+
+Thirty years of building PCs — every machine since Windows 95 hand-assembled, never
+store-bought — and the same scene on repeat: people paying for performance they will
+never feel, while overlooking the one cheap part (usually storage) that is actually
+holding them back. Every configurator on the internet stands on the overselling side.
+Nobody had built the tool that argues the other way.
+
+**What it does**
+
+You snip two screens Windows already has — Settings › About and the drive optimizer —
+paste them in, and say what you use the machine for. MOTTAINAI tells you which parts to
+keep and for how long, which parts are already far beyond what your use needs, and the
+one part, if any, genuinely worth replacing — sized to the need, not to what you own.
+For Windows 10 machines it lays out the paths that don't involve buying a new computer.
+The answer it is most pleased to reach is ¥0.
+
+**How I built it**
+
+Google ADK (TypeScript) runs two perception agents concurrently — one reads the
+hardware from the images, one interprets the workload — and they join exactly once
+into a deterministic judgment engine. No model touches a verdict or a price:
+core/verdict.js is plain tested code, 127 assertions. Gemini 3.7 Flash does the two
+jobs models are good at — reading images and putting a finished result into words —
+and the narrator is forbidden from introducing a number the engine did not produce.
+Deployed on Cloud Run.
+
+**Challenges we ran into**
+
+ADK's static graph fires a downstream node once per incoming edge, so joining two
+perception agents without running the merge twice took `dynamicEntry`. The harder
+class of bug was my own code lying with money: an early version printed "solved for
+free" while quietly needing ¥15,800 of RAM, and a later one asserted TPM state it had
+never read. Both are now guarded by tests that fail if a headline overclaims.
+
+**Accomplishments that we're proud of**
+
+A tool that recommends *not* buying — no affiliate links, no product placement, no
+place for them. 5,948 CPUs and 3,013 GPUs looked up against Microsoft's actual
+Windows 11 support lists, with `null` answers that stay `null` and say why, instead
+of interpolated guesses.
+
+**What we learned**
+
+Deciding in advance what the model is *not allowed* to decide turned out to be the
+center of the design. Everything that touches money runs in ordinary code that a test
+can pin down.
+
+**What's next**
+
+Laptop-specific judgment (screen, camera, battery — the parts this version deliberately
+left out), keeping the price data fresh, and running it as a permanent site.
+
 ## まだ残っている正直な穴
 
 - ゲームの必要スペックが公式サイトの403とJS描画で未取得（現状は編集判断であることを画面に明示）
