@@ -38,17 +38,61 @@
   .card h2{font-size:15px;letter-spacing:.06em;color:var(--ink-soft);font-weight:600;margin-bottom:16px}
 
   /* ---- 入力 ---- */
+  .lead{font-size:14px;color:var(--ink-soft);margin-bottom:18px;max-width:660px}
+  .lead b{color:var(--ink)}
+  kbd{
+    display:inline-block;padding:1px 7px;border:1px solid #d8d1c4;border-bottom-width:2px;
+    border-radius:5px;background:#fff;font-family:inherit;font-size:12px;font-weight:600;
+    color:var(--ink);line-height:1.6;white-space:nowrap;
+  }
+
+  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px;margin-bottom:18px}
+  .step{display:flex;gap:12px;border:1px solid var(--line);border-radius:11px;padding:14px 16px;background:#fdfbf7}
+  .step .sn{
+    flex:none;width:23px;height:23px;border-radius:50%;background:var(--accent);color:#fff;
+    font-size:12.5px;font-weight:600;display:flex;align-items:center;justify-content:center;margin-top:2px;
+  }
+  .step .st{font-size:14px;font-weight:600}
+  .step .sk{font-size:12px;color:var(--ink-soft);margin-top:5px}
+  .step .sg{font-size:12px;color:var(--keep);margin-top:6px}
+
   .drop{
-    border:2px dashed var(--line); border-radius:12px; padding:30px 20px; text-align:center;
+    border:2px dashed var(--line); border-radius:12px; padding:26px 20px; text-align:center;
     cursor:pointer; transition:.18s; background:#fdfbf7;
   }
   .drop:hover,.drop.over{border-color:var(--accent);background:#f2f8fa}
   .drop .big{font-size:15px;font-weight:600;margin-bottom:6px}
   .drop .small{font-size:12.5px;color:var(--ink-soft)}
-  .drop img{max-width:100%;max-height:230px;border-radius:8px;margin-top:12px}
 
-  .or{display:flex;align-items:center;gap:14px;margin:20px 0 16px;color:var(--ink-soft);font-size:12.5px}
-  .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+  .shelf{display:flex;flex-wrap:wrap;gap:10px;margin-top:13px}
+  .shot{position:relative;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff;width:150px}
+  .shot img{display:block;width:100%;height:88px;object-fit:cover;object-position:top left}
+  .shot .cap{font-size:11px;color:var(--ink-soft);padding:5px 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .shot .x{
+    position:absolute;top:4px;right:4px;width:21px;height:21px;border:none;border-radius:50%;
+    background:rgba(43,42,38,.78);color:#fff;font-size:13px;line-height:1;cursor:pointer;font-family:inherit;
+  }
+  .shot .x:hover{background:var(--stop)}
+
+  details.manual{margin-top:18px;border:1px solid var(--line);border-radius:11px;background:#fdfbf7}
+  details.manual>summary{
+    cursor:pointer;padding:12px 16px;font-size:13px;color:var(--ink-soft);
+    list-style:none;user-select:none;
+  }
+  details.manual>summary::-webkit-details-marker{display:none}
+  details.manual>summary::before{content:"▸ ";color:var(--accent)}
+  details.manual[open]>summary::before{content:"▾ "}
+  details.manual>summary:hover{color:var(--accent)}
+  details.manual .body{padding:2px 16px 18px}
+
+  /* ---- 読み取り結果の読み合わせ ---- */
+  .reads{width:100%;border-collapse:collapse;font-size:13.5px}
+  .reads td{padding:9px 9px;border-bottom:1px solid #f0ebe2;vertical-align:top}
+  .reads td.k{width:150px;color:var(--ink-soft);font-size:12.5px}
+  .reads td.v{font-weight:600}
+  .reads tr.miss td.v{font-weight:400;color:var(--ink-soft)}
+  .reads .next{font-size:12px;color:var(--fix);margin-top:3px}
+  .reads .ok{color:var(--keep);font-weight:600}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:13px}
   label.f{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:5px}
@@ -137,51 +181,82 @@
 
 <!-- 入力 -->
 <div class="card" id="inputCard">
-  <h2>1 — 今のPCを見せる</h2>
+  <h2>1 — Show the machine</h2>
+
+  <p class="lead">
+    You do not need to know what is inside it. Windows already knows — two of its own screens
+    say everything this tool judges. Snip each one with <kbd>Win</kbd> <kbd>Shift</kbd> <kbd>S</kbd>
+    and press <kbd>Ctrl</kbd> <kbd>V</kbd> on this page. <b>Nothing has to be saved to a file.</b>
+  </p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="sn">1</div>
+      <div>
+        <div class="st">Settings › System › About</div>
+        <div class="sk"><kbd>Win</kbd> <kbd>I</kbd> → System → About</div>
+        <div class="sg">processor · installed memory · Windows edition</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="sn">2</div>
+      <div>
+        <div class="st">Task Manager › Performance</div>
+        <div class="sk"><kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>Esc</kbd> → Performance</div>
+        <div class="sg">graphics card · whether the C: drive is an SSD or a hard disk</div>
+      </div>
+    </div>
+  </div>
 
   <div class="drop" id="drop">
-    <div class="big">写真をドロップ / クリックして選ぶ</div>
-    <div class="small">PCの中身・デバイスマネージャーの画面・仕様シール、どれでもいい</div>
-    <img id="preview" class="hide" alt="">
-    <input type="file" id="file" accept="image/*" class="hide">
+    <div class="big">Paste here, drop an image, or click to choose</div>
+    <div class="small">
+      The two screens above are the fast path. A photo of the machine, a spec sheet or a
+      laptop sticker is read the same way. Up to 4 images.
+    </div>
+    <input type="file" id="file" accept="image/*" multiple class="hide">
   </div>
+  <div class="shelf hide" id="shelf"></div>
 
-  <div class="or">写真がなければ、分かる範囲で入力</div>
-
-  <div class="grid">
-    <div>
-      <label class="f">CPU（型番）</label>
-      <input type="text" id="cpu" list="cpuList" placeholder="例: i5-7500">
-      <datalist id="cpuList"></datalist>
+  <details class="manual" id="manualBox">
+    <summary>I already know the model numbers — let me type them instead</summary>
+    <div class="body">
+      <div class="grid">
+        <div>
+          <label class="f">Processor</label>
+          <input type="text" id="cpu" list="cpuList" placeholder="e.g. i5-7500">
+          <datalist id="cpuList"></datalist>
+        </div>
+        <div>
+          <label class="f">Graphics</label>
+          <input type="text" id="gpu" list="gpuList" placeholder="integrated / e.g. GTX 1060">
+          <datalist id="gpuList"></datalist>
+        </div>
+        <div>
+          <label class="f">Memory</label>
+          <select id="ram">
+            <option value="">not sure</option>
+            <option value="4">4 GB</option><option value="8">8 GB</option>
+            <option value="16">16 GB</option><option value="32">32 GB</option><option value="64">64 GB</option>
+          </select>
+        </div>
+        <div>
+          <label class="f">System drive</label>
+          <select id="stype">
+            <option value="">not sure</option>
+            <option value="hdd">Hard disk (it clicks and whirrs)</option>
+            <option value="ssd">SSD</option>
+            <option value="nvme">NVMe SSD</option>
+          </select>
+        </div>
+      </div>
     </div>
-    <div>
-      <label class="f">グラフィック</label>
-      <input type="text" id="gpu" list="gpuList" placeholder="内蔵 / 例: GTX 1060">
-      <datalist id="gpuList"></datalist>
-    </div>
-    <div>
-      <label class="f">メモリ</label>
-      <select id="ram">
-        <option value="">わからない</option>
-        <option value="4">4GB</option><option value="8">8GB</option>
-        <option value="16">16GB</option><option value="32">32GB</option><option value="64">64GB</option>
-      </select>
-    </div>
-    <div>
-      <label class="f">ストレージ</label>
-      <select id="stype">
-        <option value="">わからない</option>
-        <option value="hdd">HDD（カリカリ音がする）</option>
-        <option value="ssd">SSD</option>
-        <option value="nvme">NVMe SSD</option>
-      </select>
-    </div>
-  </div>
+  </details>
 
   <h2 style="margin-top:26px">2 — 何に使っているか</h2>
   <div class="chips" id="chips"></div>
 
-  <button class="go" id="go">これで調べる</button>
+  <button class="go" id="go">Check this machine</button>
 </div>
 
 <!-- フリート -->
@@ -203,7 +278,9 @@
 
 <script>
 const WORKLOAD_FALLBACK = [{id:'office',label:'Web・動画視聴・Office（事務）'}];
-let workloads = [], picked = new Set(['office']), imageData = null, imageMime = null;
+const MAX_IMAGES = 4;          // 揃えるべき画面は2枚。上限は撮り直しの余裕を見た数
+const MAX_EDGE   = 2560;       // 送る前に落とす長辺。小さい文字が潰れない範囲で上限を切る
+let workloads = [], picked = new Set(['office']), images = [], shotSeq = 0;
 
 const $ = s => document.querySelector(s);
 
@@ -228,23 +305,81 @@ async function loadWorkloads(){
   }
 }
 
-// ---- 画像 ----
+// ---- 画像（貼り付け・ドロップ・選択の3経路） ----
 const drop = $('#drop'), file = $('#file');
 drop.onclick = () => file.click();
 drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
 drop.ondragleave = () => drop.classList.remove('over');
-drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); if(e.dataTransfer.files[0]) readImage(e.dataTransfer.files[0]); };
-file.onchange = () => { if(file.files[0]) readImage(file.files[0]); };
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); addFiles(e.dataTransfer.files); };
+file.onchange = () => { addFiles(file.files); file.value = ''; };
 
-function readImage(f){
-  const r = new FileReader();
-  r.onload = () => {
-    imageData = r.result; imageMime = f.type;
-    const img = $('#preview'); img.src = r.result; img.classList.remove('hide');
-    drop.querySelector('.big').textContent = '読み取り対象にする画像';
-    drop.querySelector('.small').textContent = f.name;
-  };
-  r.readAsDataURL(f);
+// 素人にとっての最短経路がこれ。Win+Shift+S で切り取ってこのページで Ctrl+V。
+// ファイルを保存させないので「どこに保存したか分からない」で止まる人が出ない。
+document.addEventListener('paste', e => {
+  const files = [...(e.clipboardData?.items ?? [])]
+    .filter(i => i.kind === 'file' && i.type.startsWith('image/'))
+    .map(i => i.getAsFile()).filter(Boolean);
+  if(files.length){ e.preventDefault(); addFiles(files); }
+});
+
+async function addFiles(fileList){
+  for(const f of [...(fileList ?? [])]){
+    if(!f.type?.startsWith('image/')) continue;
+    if(images.length >= MAX_IMAGES) break;
+    images.push(await prepare(f));
+    renderShelf();
+  }
+}
+
+/**
+ * 送る前に長辺を切ってJPEGに焼き直す。Windowsのスクショは4K機だと1枚数MBのPNGで、
+ * 4枚だと1回のリクエストに収まらない。縮小して逆に大きくなる場合（小さなPNG）は
+ * 元のまま送る。canvasが使えない環境では黙って元データに落とす。
+ */
+function prepare(f){
+  return new Promise(resolve => {
+    const name = f.name || 'pasted image';
+    const raw = new FileReader();
+    raw.onload = () => {
+      const fallback = () => resolve({ id:++shotSeq, name, dataUrl:raw.result, mimeType:f.type || 'image/png' });
+      const img = new Image();
+      img.onerror = fallback;
+      img.onload = () => {
+        try{
+          const scale = Math.min(1, MAX_EDGE / Math.max(img.width, img.height));
+          const c = document.createElement('canvas');
+          c.width  = Math.max(1, Math.round(img.width  * scale));
+          c.height = Math.max(1, Math.round(img.height * scale));
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          const data = c.toDataURL('image/jpeg', 0.9);
+          if(data.length < raw.result.length)
+            resolve({ id:++shotSeq, name, dataUrl:data, mimeType:'image/jpeg' });
+          else fallback();
+        }catch(e){ fallback(); }
+      };
+      img.src = raw.result;
+    };
+    raw.onerror = () => resolve(null);
+    raw.readAsDataURL(f);
+  }).then(v => v ?? { id:++shotSeq, name:'unreadable file', dataUrl:null, mimeType:null });
+}
+
+function renderShelf(){
+  const shelf = $('#shelf');
+  shelf.classList.toggle('hide', images.length === 0);
+  shelf.innerHTML = images.map(im => `
+    <div class="shot">
+      <button class="x" data-id="${im.id}" title="remove">×</button>
+      ${im.dataUrl ? `<img src="${im.dataUrl}" alt="">` : ''}
+      <div class="cap">${escapeHtml(im.name)}</div>
+    </div>`).join('');
+  shelf.querySelectorAll('.x').forEach(b => b.onclick = () => {
+    images = images.filter(im => String(im.id) !== b.dataset.id);
+    renderShelf();
+  });
+  drop.querySelector('.big').textContent = images.length >= MAX_IMAGES
+    ? `${MAX_IMAGES} images is the limit — remove one to add another`
+    : 'Paste here, drop an image, or click to choose';
 }
 
 // ---- 型番の候補 ----
@@ -264,11 +399,11 @@ $('#gpu').oninput = e => suggest('gpu', e.target.value, 'gpuList');
 
 // ---- フリート表示 ----
 const AGENTS = [
-  {id:'scan',     n:'scan',     d:'画像から部品を読む',     model:true},
-  {id:'workload', n:'workload', d:'用途を読み取る',         model:true},
-  {id:'resolve',  n:'resolve',  d:'型番を照合する',         model:false},
-  {id:'verdict',  n:'verdict',  d:'判定する（モデル不使用）', model:false},
-  {id:'narrate',  n:'narrate',  d:'言葉にする',             model:true},
+  {id:'scan',     n:'scan',     d:'reads each image on its own', model:true},
+  {id:'workload', n:'workload', d:'reads what it is used for',   model:true},
+  {id:'resolve',  n:'resolve',  d:'matches the parts table',     model:false},
+  {id:'verdict',  n:'verdict',  d:'decides — no model here',     model:false},
+  {id:'narrate',  n:'narrate',  d:'puts it into words',          model:true},
 ];
 function renderFleet(state){
   $('#fleet').innerHTML = AGENTS.map(a => `
@@ -280,7 +415,10 @@ function renderFleet(state){
 
 // ---- 実行 ----
 $('#go').onclick = async () => {
-  const btn = $('#go'); btn.disabled = true; btn.textContent = '調べている…';
+  const btn = $('#go'); btn.disabled = true;
+  btn.textContent = images.length
+    ? `Reading ${images.length} image${images.length > 1 ? 's' : ''}…`
+    : 'Checking…';
   $('#fleetCard').classList.remove('hide');
   $('#result').innerHTML = '';
 
@@ -297,7 +435,7 @@ $('#go').onclick = async () => {
     const res = await fetch('/api/judge', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        image: imageData, mimeType: imageMime,
+        images: images.filter(im => im.dataUrl).map(im => ({ data: im.dataUrl, mimeType: im.mimeType })),
         workloads: [...picked], manual, lang:'ja',
       }),
     });
@@ -306,10 +444,10 @@ $('#go').onclick = async () => {
     const done = {}; AGENTS.forEach(a => done[a.id]='done'); renderFleet(done);
     render(data);
   }catch(e){
-    $('#result').innerHTML = `<div class="card"><div class="warn">失敗した: ${e.message}</div></div>`;
+    $('#result').innerHTML = `<div class="card"><div class="warn">失敗した: ${escapeHtml(e.message)}</div></div>`;
     renderFleet({});
   }
-  btn.disabled = false; btn.textContent = 'もう一度調べる';
+  btn.disabled = false; btn.textContent = 'Check again';
 };
 
 // ---- 結果描画 ----
@@ -346,6 +484,8 @@ function render(d){
 
   if(d.narration) h += `<div class="narr">${escapeHtml(d.narration)}</div>`;
   h += `</div>`;
+
+  h += readBackCard(d);
 
   // 部位ごと
   h += `<div class="card"><h2>部位ごとの判定</h2><table>
@@ -386,13 +526,89 @@ function render(d){
     h += `</div>`;
   }
 
-  if(d.machine?.unresolved?.length){
-    h += `<div class="card"><div class="warn"><b>読み取れなかったもの</b><br>${d.machine.unresolved.map(escapeHtml).join('<br>')}<br>
+  // 注記は2種類ある。判定に効いているもの（読めていない・食い違った）と、
+  // 1枚1枚についての覚書（「この画面にはGPUが無い」）。後者は、別の枚で読めていれば
+  // 判定に何も足さない。全部読めているのに「読み取れなかったもの」が並ぶと、
+  // 読めているものを読めていないと言うことになる ＝ この道具が一番やってはいけないこと。
+  const notes = d.machine?.unresolved ?? [];
+  const perImage = notes.filter(n => /^image \d+: /.test(n));
+  const blocking = notes.filter(n => !/^image \d+: /.test(n));
+  const show = [...blocking, ...(s.unknownCount ? perImage : [])];
+  if(show.length){
+    h += `<div class="card"><div class="warn"><b>読み取れなかったもの</b><br>${show.map(escapeHtml).join('<br>')}<br>
       <span style="color:var(--ink-soft)">分からないものは推測せず、そのまま「不明」として扱っている。</span></div></div>`;
   }
 
   $('#result').innerHTML = h;
   $('#result').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/**
+ * 読み合わせ。「何が読めて、何がまだ読めていないか」を4行で見せ、
+ * 読めていない行には、それが映っている画面の名前をそのまま添える。
+ *
+ * これを出す理由は、判定が「まだ結論を出せない」で止まった時に、
+ * 利用者が次に何をすればいいのかが画面から分かるようにするため。
+ * 「バージョン情報」の画面にはグラフィックとストレージが映っていないので、
+ * 1枚だけ撮った人は必ずここに来る。
+ */
+const SHOT_FOR = {
+  cpu:     'Settings › System › About',
+  gpu:     'Task Manager › Performance',
+  ram:     'Settings › System › About',
+  storage: 'Task Manager › Performance',
+};
+const DRIVE_LABEL = { hdd:'Hard disk', ssd:'SSD', nvme:'NVMe SSD' };
+
+function readBackCard(d){
+  const m = d.machine ?? {};
+  const scanned = m.scanned ?? { imageCount:0, readCount:0 };
+  const st = m.storage ?? {};
+
+  const gpuName = m.gpu?.generic ? 'Integrated graphics' : (m.gpu?.fullName || m.gpu?.name);
+  const rows = [
+    { k:'Processor',    got: m.cpu && !m.cpu.unresolved ? (m.cpu.fullName || m.cpu.name) : null,
+      raw: m.cpu?.unresolved ? m.cpu.name : null, shot: SHOT_FOR.cpu },
+    { k:'Graphics',     got: m.gpu && !m.gpu.unresolved ? gpuName : null,
+      raw: m.gpu?.unresolved ? m.gpu.name : null, shot: SHOT_FOR.gpu },
+    { k:'Memory',       got: m.ramGB ? `${m.ramGB} GB` : null, shot: SHOT_FOR.ram,
+      // 直した数字は、直す前も一緒に出す。補正を信じてもらう必要がなくなる。
+      aside: scanned.ramReadAs
+        ? `the screenshot said ${scanned.ramReadAs} GB — Windows reports the memory it can use, `
+          + `and the hardware keeps the rest`
+        : null },
+    { k:'System drive', got: st.type ? `${DRIVE_LABEL[st.type] ?? st.type}${st.gb ? ' · ' + st.gb + ' GB' : ''}` : null,
+      shot: SHOT_FOR.storage },
+  ];
+
+  const missing = rows.filter(r => !r.got);
+  // 全部揃っていて、しかも画像も使っていないなら、この表は何も足さない
+  if(!scanned.imageCount && !missing.length) return '';
+
+  const head = scanned.imageCount
+    ? `Read from ${scanned.readCount} of ${scanned.imageCount} image${scanned.imageCount > 1 ? 's' : ''}.`
+    : 'No image was sent — this is what was typed in.';
+
+  let h = `<div class="card"><h2>What was actually read</h2>
+    <div style="font-size:13px;color:var(--ink-soft);margin-bottom:10px">${head}</div>
+    <table class="reads">`;
+  for(const r of rows){
+    h += `<tr class="${r.got ? '' : 'miss'}">
+      <td class="k">${r.k}</td>
+      <td class="v">${r.got ? escapeHtml(r.got) + ' <span class="ok">✓</span>' : 'not read'}
+        ${r.raw ? `<div class="next">read as “${escapeHtml(r.raw)}”, but that does not pin down one part</div>` : ''}
+        ${r.aside ? `<div class="next" style="color:var(--ink-soft)">${escapeHtml(r.aside)}</div>` : ''}
+        ${r.got ? '' : `<div class="next">→ ${r.shot}</div>`}
+      </td></tr>`;
+  }
+  h += `</table>`;
+  if(missing.length){
+    h += `<div class="warn" style="margin-top:14px">
+      ${missing.length} of the 4 things this tool judges ${missing.length > 1 ? 'are' : 'is'} still unread,
+      so the answer above is not finished. Capture the screen named beside each one and paste it in —
+      the earlier images stay.</div>`;
+  }
+  return h + `</div>`;
 }
 
 function escapeHtml(s){
