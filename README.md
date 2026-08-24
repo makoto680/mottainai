@@ -85,13 +85,25 @@ concurrently and join exactly once.
 
 | | count | source |
 |---|---|---|
-| CPUs | 125 | PassMark CPU Mark |
-| GPUs | 87 (20 integrated) | PassMark G3D Mark |
+| CPUs | 6,719 | PassMark CPU Mark |
+| GPUs | 3,013 (221 integrated) | PassMark G3D Mark |
 | Prices | RAM / SSD / whole machines | Japanese retail, observed 2026-08-24 |
-| Windows 11 rules | requirements + CPU generation boundary | Microsoft |
+| Windows 11 support | 87 Intel / 399 AMD / 18 Qualcomm list entries | Microsoft |
 
-Every row carries its source. Benchmarks come from a single provider on purpose —
-mixing scoring systems silently corrupts every comparison built on them.
+Benchmark scores are **CPU Mark and G3D Mark, courtesy of PassMark Software**
+([cpubenchmark.net](https://www.cpubenchmark.net/), [videocardbenchmark.net](https://www.videocardbenchmark.net/)).
+Every row in `data/parts.json` carries the URL it came from. Benchmarks come from a
+single provider on purpose — mixing scoring systems silently corrupts every comparison
+built on them.
+
+An earlier version shipped 125 chips chosen by hand, and the machines this tool exists
+to help were the ones it could not look up: no Celeron, no Pentium, no Atom, no Athlon.
+Those families are where "my laptop got slow" actually lives.
+
+Windows 11 support is matched against Microsoft's published lists rather than a
+generation rule of thumb, and each answer keeps the list entry that decided it. Where
+the lists cannot settle a part, the answer is `null` and says why — Ryzen 9000 desktop
+parts sit past where the list stops, and calling them unsupported would be false.
 
 Where a figure could not be obtained it is `null` and stays `null`; nothing is
 interpolated to fill a gap. The price of a part shown with only a lowest listing is
