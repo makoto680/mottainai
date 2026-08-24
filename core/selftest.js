@@ -190,7 +190,48 @@ console.log('\n[7] 余力は検算できる倍率で示す（年数に変換し�
 
   // 年数を名乗るフィールドが復活していないこと（同じ間違いを繰り返さないための番人）
   check('年数のフィールドは持たない', !('headroomYears' in a));
+  check('先の年数を語る言葉が混ざらない',
+    !/年|将来|この先|もつ/.test(a.headroom ?? ''), `(${a.headroom})`);
   console.log(`       → "${a.headroom}"`);
+}
+
+console.log('\n[7b] 5段階の札と、境目で崖にならないこと');
+{
+  const m = s => ({ cpu: { score: s, win11: true }, gpu: { score: 0 }, ramGB: 16,
+                    storage: { type: 'ssd', gb: 512 }, tpm: 'enabled', secureBoot: true });
+  const need = WORKLOADS.office.cpu.need;
+  const at = r => judge(m(Math.round(need * r)), ['office']).parts.cpu;
+
+  check('足りない',           at(0.9).level === 'short');
+  check('ぎりぎり足りている', at(1.1).level === 'barely');
+  check('足りている',         at(1.6).level === 'enough');
+  check('余裕がある',         at(3.0).level === 'comfort');
+  check('明らかに過剰',       at(6.0).level === 'excessive');
+
+  // 境目の1点差で判定が反転したように見えないこと。
+  // 札は変わっても、倍率が併記され「境目あたり」と添えられていれば連続量だと伝わる。
+  const below = at(1.96), above = at(2.04);
+  check('境目をまたぐと札は変わる', below.level !== above.level);
+  check('その両側に「境目あたり」と添える',
+    /境目/.test(below.headroom) && /境目/.test(above.headroom));
+  check('両側で倍率の表示は同じ（＝連続量だと分かる）',
+    below.headroom.match(/約[\d.]+倍/)[0] === above.headroom.match(/約[\d.]+倍/)[0]);
+  console.log(`       → 下: "${below.headroom}"`);
+  console.log(`       → 上: "${above.headroom}"`);
+}
+
+console.log('\n[7c] 読者が知っている機体と比べる');
+{
+  const ref = { cpuScore: 12505, cpuName: 'i3-12100', label: '今売られている入門デスクトップ' };
+  const r = judge(
+    { cpu: { score: 11970, win11: true }, gpu: { score: 0 }, ramGB: 16,
+      storage: { type: 'ssd', gb: 512 }, tpm: 'enabled', secureBoot: true },
+    ['office'], { reference: ref });
+  check('基準機との倍率が出る', r.parts.cpu.vsReference === 0.96, `(${r.parts.cpu.vsReference})`);
+  check('文章にも基準機が出る', /入門機と比べて/.test(r.parts.cpu.headroom));
+  check('基準機の情報を結果に添える', r.reference?.cpuName === 'i3-12100');
+  check('年数を語らない断り書きがある', /年数|何年/.test(r.horizon ?? ''));
+  console.log(`       → "${r.parts.cpu.headroom}"`);
 }
 
 console.log('\n[8] 「0円」と言えるのは本当に他の出費が無い時だけ');

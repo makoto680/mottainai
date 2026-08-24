@@ -78,6 +78,7 @@ app.post('/api/judge', async (req, res) => {
       win11Data: parts.win11,
       prices: parts.prices,
       usedMachineYen: parts.prices.usedMachineYen,
+      reference: parts.reference,
       market: input.market ?? null,
     });
     res.json({ ...result, elapsedMs: Date.now() - started });

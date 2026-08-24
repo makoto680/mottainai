@@ -79,10 +79,47 @@ function classify(ratio, enoughRatio) {
  * 倍率なら、実測ベンチ（出典あり）と用途ごとの必要ライン（編集判断だと画面に明示）の
  * 割り算でしかなく、読む側がそのまま検算できる。
  */
-function headroomLabel(ratio) {
+/**
+ * 5段階の読み札。倍率そのものは必ず横に併記する。
+ *
+ * 段階だけを見せると、境目の1点差が判定を反転させたように見えてしまう
+ * （15,000は「余裕」で14,900は「普通」なのか、という問い）。
+ * 実際には連続量なので、札は読みやすさのための丸めでしかないことが
+ * 分かる形で出す。だから札・倍率・基準機との比較を必ず3点セットで返す。
+ */
+const LEVELS = [
+  { min: 0,   key: 'short',      label: '足りていない' },
+  { min: 1.0, key: 'barely',     label: 'ぎりぎり足りている' },
+  { min: 1.3, key: 'enough',     label: '足りている' },
+  { min: 2.0, key: 'comfort',    label: '余裕がある' },
+  { min: 4.0, key: 'excessive',  label: '明らかに過剰' },
+];
+
+function levelOf(ratio) {
+  if (!isFinite(ratio)) return LEVELS[0];
+  return [...LEVELS].reverse().find(l => ratio >= l.min) ?? LEVELS[0];
+}
+
+/** 境目に近いかどうか。近ければ「境目あたり」と添えて、札の断定を弱める。 */
+function nearBoundary(ratio) {
+  return LEVELS.some(l => l.min > 0 && Math.abs(ratio - l.min) / l.min < 0.05);
+}
+
+/**
+ * 余力の説明を組み立てる。
+ * 言えるのは「今の要求に対して、今どの位置にいるか」だけ。
+ * 何年もつかは書かない — 過去の性能推移は分かっても、この先の要求は誰にも読めない。
+ */
+function headroomLabel(ratio, refRatio) {
   if (!isFinite(ratio) || ratio < 1) return null;
-  if (ratio >= 10) return 'この用途の必要ラインの10倍以上ある';
-  return `この用途の必要ラインの約${ratio.toFixed(1)}倍ある`;
+  const lv = levelOf(ratio);
+  const times = ratio >= 10 ? '10倍以上' : `約${ratio.toFixed(1)}倍`;
+  let s = `${lv.label}（この用途の必要ラインの${times}）`;
+  if (nearBoundary(ratio)) s += '※次の段階との境目あたり';
+  if (refRatio != null && isFinite(refRatio)) {
+    s += ` — 今売られている入門機と比べて約${refRatio.toFixed(1)}倍`;
+  }
+  return s;
 }
 
 function judgeScored(current, req, label, opts = {}) {
@@ -97,14 +134,19 @@ function judgeScored(current, req, label, opts = {}) {
   const ratio = current / req.need;
   const enoughRatio = req.enough ? current / req.enough : 0;
   const status = classify(ratio, enoughRatio);
+  const refScore = opts.referenceScore ?? null;
+  const refRatio = refScore ? current / refScore : null;
   return {
     key: label,
     status,
+    level: levelOf(ratio).key,
+    levelLabel: levelOf(ratio).label,
     current,
     required: req.need,
     enough: req.enough,
     ratio: Math.round(ratio * 100) / 100,
-    headroom: headroomLabel(ratio),
+    vsReference: refRatio != null ? Math.round(refRatio * 100) / 100 : null,
+    headroom: headroomLabel(ratio, refRatio),
     currentLabel: formatter(current),
     requiredLabel: formatter(req.need),
   };
@@ -181,6 +223,7 @@ export function judge(machine, workloadIds, opts = {}) {
 
   parts.cpu = judgeScored(machine.cpu?.score ?? 0, req.cpu, 'CPU', {
     formatter: v => `スコア ${v.toLocaleString()}`,
+    referenceScore: opts.reference?.cpuScore ?? null,
   });
   parts.cpu.name = machine.cpu?.name ?? '不明';
 
@@ -282,6 +325,10 @@ export function judge(machine, workloadIds, opts = {}) {
     workloads: req.workloads.map(w => ({ id: w.id, label: w.label, note: w.note })),
     parts,
     win11,
+    reference: opts.reference ?? null,
+    // 画面にそのまま出すための断り書き。年数を書かない理由を、道具の側から明示する。
+    horizon: '判定しているのは「今の要求に対する現在地」だけ。'
+           + 'この先どれだけ要求が上がるかは誰にも読めないので、何年もつかは言わない。',
     summary: {
       keepEverything: blockers.length === 0,
       blockerCount: blockers.length,

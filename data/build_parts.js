@@ -134,6 +134,27 @@ const wholePc = (raw.prices?.whole_pc ?? []).map(x => {
 const usedWin11 = wholePc.find(x => /used/i.test(x.type) && /laptop/i.test(x.type))
               ?? wholePc.find(x => /used/i.test(x.type));
 
+/**
+ * 「今売られている機体」を基準点として持つ。
+ *
+ * 倍率だけを見せても、分母が読者に見えていなければ意味を持たない。
+ * 「必要ラインの4.8倍」より「今売っている6万円台の新品とほぼ同じ」の方が、
+ * 読んだ瞬間に自分の位置が分かる。しかもこれは今の市場の事実で、未来の予測を含まない。
+ */
+const refRow = wholePc.find(x => /New/i.test(x.type) && /desktop/i.test(x.type));
+const refCpu = cpus.find(c => c.name === 'i3-12100');
+const reference = (refRow && refCpu) ? {
+  cpuName: refCpu.name,
+  cpuScore: refCpu.score,
+  machineYen: refRow.low ?? refRow.yen,
+  label: '今売られている入門デスクトップ',
+  detail: 'PASOUL G-SLIM S2（Core i3-12100F / 8GB / 256GB SSD）',
+  // 販売機はFつき（内蔵GPU無し）。CPUの演算性能は無印と同じなので、スコアは無印のものを使う。
+  caveat: '販売機はCore i3-12100F。スコアは内蔵GPU以外が同一の i3-12100 のもの',
+  cpuSource: refCpu.source,
+  priceSource: refRow.source,
+} : null;
+
 const prices = {
   storage: storageOptions,
   memory: memoryOptions,
@@ -154,6 +175,7 @@ const out = {
     note: '数値は調査の生データをそのまま移送したもの。このスクリプトは値を作らない。',
   },
   win11: raw.win11 ?? null,
+  reference,
   cpus,
   gpus,
   prices,
@@ -170,3 +192,4 @@ console.log(`  CPU ${cpus.length}件（スコアあり ${withScore}）`);
 console.log(`  GPU ${gpus.length}件（スコアあり ${gWithScore} / 内蔵 ${igpu}）`);
 console.log(`  ストレージ候補 ${storageOptions.length}件: ${storageOptions.map(o => `${o.gb}GB/${o.yen.toLocaleString()}円`).join(', ') || 'なし'}`);
 console.log(`  メモリ候補 ${memoryOptions.length}件: ${memoryOptions.map(o => `${o.gb}GB/${o.yen.toLocaleString()}円`).join(', ') || 'なし'}`);
+console.log(`  基準点: ${reference ? reference.label+' '+reference.cpuName+' スコア'+reference.cpuScore+' / '+reference.machineYen.toLocaleString()+'円' : '取れず'}`);

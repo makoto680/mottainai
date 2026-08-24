@@ -351,7 +351,13 @@ function render(d){
       <td style="font-size:12.5px;color:var(--ink-soft)">${note}</td>
     </tr>`;
   }
-  h += `</table></div>`;
+  h += `</table>`;
+  if(v.horizon) h += `<div class="warn" style="background:#f4f7fa;border-color:#c9d9e8">
+    <b>年数では言わない理由</b><br>${escapeHtml(v.horizon)}</div>`;
+  if(v.reference) h += `<div style="font-size:12px;color:var(--ink-soft);margin-top:10px">
+    比較の基準＝<b>${escapeHtml(v.reference.label)}</b>（${escapeHtml(v.reference.detail)}・${yen(v.reference.machineYen)}）。
+    CPUスコア ${v.reference.cpuScore.toLocaleString()}。${escapeHtml(v.reference.caveat ?? '')}</div>`;
+  h += `</div>`;
 
   // Windows 11
   if(v.win11){

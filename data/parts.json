@@ -1,7 +1,7 @@
 {
  "meta": {
   "builtFrom": "research_raw.json",
-  "builtAt": "2026-08-24 08:57",
+  "builtAt": "2026-08-24 10:54",
   "cpuCount": 125,
   "gpuCount": 87,
   "note": "数値は調査の生データをそのまま移送したもの。このスクリプトは値を作らない。"
@@ -217,6 +217,16 @@
    "note": "Microsoft-provided app that reports exactly which requirement a PC fails.",
    "source": "https://support.microsoft.com/en-us/windows/how-to-use-the-pc-health-check-app-9c8abd9b-03ba-4e67-81ef-36f37caa7844"
   }
+ },
+ "reference": {
+  "cpuName": "i3-12100",
+  "cpuScore": 12505,
+  "machineYen": 62500,
+  "label": "今売られている入門デスクトップ",
+  "detail": "PASOUL G-SLIM S2（Core i3-12100F / 8GB / 256GB SSD）",
+  "caveat": "販売機はCore i3-12100F。スコアは内蔵GPU以外が同一の i3-12100 のもの",
+  "cpuSource": "https://www.cpubenchmark.net/CPU_mega_page.html",
+  "priceSource": "https://kakaku.com/pc/desktop-pc/itemlist.aspx?pdf_Spec107=21"
  },
  "cpus": [
   {

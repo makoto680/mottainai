@@ -128,13 +128,14 @@ async function resolveNode(ctx, { parts, scan, input }) {
  * 判定（コード・★モデル不使用）
  * 金額に関わる結論はここだけで出す。
  */
-async function verdictNode(ctx, { machine, workloads, win11Data, prices, market, usedMachineYen }) {
+async function verdictNode(ctx, { machine, workloads, win11Data, prices, market, usedMachineYen, reference }) {
   const ids = workloads?.workloads ?? ['office'];
   const result = judge(machine, ids, {
     win11Data: win11Data ?? null,
     prices: prices ?? {},
     market: market ?? null,
     usedMachineYen: usedMachineYen ?? null,
+    reference: reference ?? null,
   });
   result.determinedBy = 'core/verdict.js (no model in loop)';
   return result;

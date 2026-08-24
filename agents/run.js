@@ -20,6 +20,7 @@ export async function runFleet(input, deps = {}) {
     win11Data: deps.win11Data ?? null,
     prices: deps.prices ?? {},
     usedMachineYen: deps.usedMachineYen ?? null,
+    reference: deps.reference ?? null,
     market: deps.market ?? null,
   });
 
