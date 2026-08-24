@@ -16,6 +16,14 @@ import { Workflow, node } from '@google/adk';
 import { judge } from '../core/verdict.js';
 import { WORKLOAD_LIST } from '../core/workloads.js';
 import { buildResolvers } from '../core/resolve.js';
+import { mergeScans } from '../core/merge_scan.js';
+
+/**
+ * 受け取る画像の上限。素人向けの経路は「バージョン情報」と「タスクマネージャー」の
+ * 2枚で足りる。上限を置くのは、1リクエストの大きさとモデル呼び出し回数の両方を
+ * 予測可能にしておくため。
+ */
+const MAX_IMAGES = 4;
 
 /** 照合器は部品表ごとに1回だけ組む（掃除済みキーの前計算があるため） */
 const RESOLVER_CACHE = new WeakMap();
@@ -25,24 +33,40 @@ function resolversFor(parts) {
   return RESOLVER_CACHE.get(parts);
 }
 
-const SCAN_PROMPT = `You are looking at a photo or screenshot from someone's computer.
-It may be: the inside of a desktop PC, a Device Manager / System Information screen,
-a spec sheet, or a photo of a laptop label.
+const SCAN_PROMPT = `You are looking at ONE image from someone's Windows PC.
 
-Identify what you can actually read. Never guess a model number you cannot see.
+It is most likely one of the two screens this tool asks people to capture:
+  - Settings > System > About — prints "Processor", "Installed RAM" and the Windows edition.
+  - Task Manager > Performance — the left column lists CPU, Memory, "Disk 0 (C:)" with SSD or
+    HDD written beside it, and "GPU 0" with the graphics card name.
+It may instead be Device Manager, System Information, a spec sheet, the inside of a desktop,
+or a sticker on a laptop.
+
+Read only what is actually printed in this image. Never complete a model number you cannot
+see, and never fill a field from what you happen to know about that model.
 
 Return this shape:
 {
-  "cpu":     { "name": "<exact string as printed, or null>", "confidence": "high|medium|low" },
-  "gpu":     { "name": "<exact string, or 'integrated' if clearly integrated, or null>", "confidence": "..." },
-  "ramGB":   <number or null>,
+  "screen":  "about|task-manager|device-manager|system-info|photo|other",
+  "cpu":     { "name": "<the processor line exactly as printed, or null>", "confidence": "high|medium|low" },
+  "gpu":     { "name": "<the graphics card name exactly as printed, or 'integrated' if the image only says integrated/onboard, or null>", "confidence": "..." },
+  "ramGB":   <installed memory in GB as a number, or null>,
   "storage": { "type": "hdd|ssd|nvme|null", "gb": <number or null> },
   "tpm":     "enabled|disabled|unknown",
-  "os":      "<what is printed, or null>",
-  "unreadable": ["<what a human would need to check manually>"]
+  "os":      "<the Windows edition and version as printed, or null>",
+  "unreadable": ["<what a person would still have to check by hand>"]
 }
 
-If the image does not show a computer at all, return every field as null and put a note in "unreadable".`;
+"unreadable" is for what is IN this image but cannot be trusted — text cut off at the edge,
+too blurred to read, or several drives listed with no way to tell which one is C:.
+Do NOT list a field just because this screen does not carry it. Every screen is missing most
+of them, and another image usually has it; a note saying "no GPU here" would end up on screen
+next to a graphics card that was read perfectly well from the other shot. If you can see the
+whole screen and it simply does not mention a field, leave that field null and say nothing.
+
+For "storage", report the drive that holds C:. If several drives are visible and the image
+does not say which one is C:, set the type to null and say so in "unreadable".
+If the image does not show a computer at all, set every field to null and say so in "unreadable".`;
 
 const WORKLOAD_PROMPT = (text) => `A person describes what they do with their computer:
 
@@ -57,11 +81,43 @@ do not need, which is the exact failure this tool exists to prevent.
 
 Return: { "workloads": ["<id>", ...], "reasoning": "<one short sentence>" }`;
 
-/** 画像から部品を読む（モデル） */
+/**
+ * 送られてきた画像を1つの配列に揃える。
+ * `images:[{data,mimeType}]` が主経路で、単数の `image` は以前の形との互換。
+ */
+function normalizeImages(input) {
+  const out = [];
+  for (const im of Array.isArray(input?.images) ? input.images : []) {
+    if (im?.data) out.push({ data: im.data, mimeType: im.mimeType ?? im.mime ?? null });
+  }
+  if (input?.image) out.push({ data: input.image, mimeType: input.mimeType ?? null });
+  return out.slice(0, MAX_IMAGES);
+}
+
+/**
+ * 画像から部品を読む（モデル）
+ *
+ * 画像は1枚ずつ独立に読ませ、束ねるのは core/merge_scan.js（コード）。
+ * 1回の呼び出しに全部の画像を入れてモデルに束ねさせないのは、
+ * 2枚が食い違った時の答えが「モデルが最後に書いた方」になるため。
+ *
+ * 1枚が読めなくても他の枚を巻き込まない。読めなかった事実は unreadable に載せて
+ * 画面まで運ぶ（黙って捨てると「読んだ上で問題なし」と区別が付かなくなる）。
+ */
 async function scanNode(ctx, { input, llm }) {
-  const { image, mimeType } = input ?? {};
-  if (!image) return { skipped: true, reason: '画像なし。手入力の値を使う。' };
-  return llm.visionJson(SCAN_PROMPT, image, mimeType);
+  const images = normalizeImages(input);
+  if (!images.length) return { skipped: true, reason: '画像なし。手入力の値を使う。', imageCount: 0 };
+
+  const results = await Promise.all(images.map(async (im, i) => {
+    try {
+      return await llm.visionJson(SCAN_PROMPT, im.data, im.mimeType);
+    } catch (e) {
+      // 何枚目かは合流器が付ける（そこで初めて「何枚のうちの1枚か」が分かる）
+      return { readError: e.message };
+    }
+  }));
+
+  return mergeScans(results);
 }
 
 /** 文章から用途を決める（モデル） */
@@ -83,43 +139,75 @@ async function resolveNode(ctx, { parts, scan, input }) {
   const manual = input?.manual ?? {};
   const R = resolversFor(parts);
 
-  const cpuName = manual.cpu ?? scan.cpu?.name ?? null;
-  const gpuName = manual.gpu ?? scan.gpu?.name ?? null;
+  // 手入力があればそれが答え。無ければスクショから出た候補を全部持ってくる。
+  // 「12th Gen Intel(R) Core(TM) i5-1235U 1.30 GHz」と「Intel Core i5-1235U」は
+  // 別の文字列だが同じチップで、それを決めるのが resolve.js の仕事。だから
+  // 文字列の段階では絞らず、行に落としてから一致を見る。
+  const candidatesOf = (manualValue, merged, legacy) => {
+    if (manualValue) return [manualValue];
+    if (Array.isArray(merged) && merged.length) return merged;
+    return legacy ? [legacy] : [];
+  };
+  const cpuNames = candidatesOf(manual.cpu, scan.cpuCandidates, scan.cpu?.name);
+  const gpuNames = candidatesOf(manual.gpu, scan.gpuCandidates, scan.gpu?.name);
 
   // 照合は core/resolve.js（両側を同じ掃除にかけ、重複行を吸収し、
   // 決められない時は候補つきで正直に保留する）。
   // 引けなかった部品に score:0 を置かない。0は「測定した結果ゼロだった」という
   // 意味の数字で、「読めていない」とは別物。ここを混ぜると、実在の8コア機に
   // 「スコア0だから買い替えろ」と言う事故になる（実際に起きかけた）。
-  const resolvePart = (kind, name) => {
-    if (!name || !R) return { part: null, note: null };
-    const r = R[kind](name);
-    if (r.picked) return { part: r.picked, note: null };
-    const cands = (r.candidates ?? []).map(c => c.name).slice(0, 4);
+  //
+  // 複数のスクショから別々の型番が出て、それが別の行に落ちた時は選ばない。
+  // どちらが本物かはここからは分からないので、片方を採ると2分の1で嘘になる。
+  const resolvePart = (kind, names) => {
+    const KIND = kind === 'cpu' ? 'CPU' : 'GPU';
+    if (!names.length || !R) return { part: null, note: null };
+
+    const tried = names.map(name => ({ name, r: R[kind](name) }));
+    const picked = tried.filter(t => t.r.picked);
+    const distinct = [...new Map(picked.map(t => [t.r.picked.name, t])).values()];
+
+    if (distinct.length === 1) return { part: distinct[0].r.picked, note: null };
+    if (distinct.length > 1) {
+      const rows = distinct.map(t => t.r.picked.name).join(' / ');
+      return {
+        part: { name: names[0], score: null, unresolved: true, candidates: distinct.map(t => t.r.picked.name) },
+        note: `${KIND}: スクショごとに違うものが読めた（${rows}）。どれがこの機体かはここからは決められない`,
+      };
+    }
+
+    // どれも行に落ちなかった。理由は先頭の候補（＝一番読めている方）で説明する。
+    const first = tried[0];
+    const cands = (first.r.candidates ?? []).map(c => c.name).slice(0, 4);
     const note = cands.length
-      ? `${kind === 'cpu' ? 'CPU' : 'GPU'}「${name}」は1つに決められない（候補: ${cands.join(' / ')}）`
-      : `${kind === 'cpu' ? 'CPU' : 'GPU'}「${name}」はベンチデータに無い`;
-    return { part: { name, score: null, unresolved: true, candidates: cands }, note };
+      ? `${KIND}「${first.name}」は1つに決められない（候補: ${cands.join(' / ')}）`
+      : `${KIND}「${first.name}」はベンチデータに無い`;
+    return { part: { name: first.name, score: null, unresolved: true, candidates: cands }, note };
   };
 
-  const cpuR = resolvePart('cpu', cpuName);
+  const cpuR = resolvePart('cpu', cpuNames);
 
   // 「内蔵」「integrated」のような一般名は型番ではないので、照合ではなく種別として扱う。
   // 型番が引けなくても「内蔵である」ことは判定に使える情報なので、不明として捨てない。
+  // 一般名と実際の型番が両方読めている時は、型番の方が情報量が多いので型番を採る。
   const GENERIC_IGPU = /^(内蔵|オンボード|integrated|igpu|onboard|cpu内蔵|なし|none)$/i;
-  const isGenericIgpu = gpuName && GENERIC_IGPU.test(String(gpuName).trim());
-  const gpuR = isGenericIgpu
+  const specificGpu = gpuNames.filter(n => !GENERIC_IGPU.test(String(n).trim()));
+  const gpuR = (gpuNames.length && !specificGpu.length)
     ? { part: { name: '内蔵グラフィック', integrated: true, score: null, generic: true }, note: null }
-    : resolvePart('gpu', gpuName);
+    : resolvePart('gpu', specificGpu);
 
   // メモリはモデルや手入力から文字列で来ることがある（"8GB"）。単位を読んで数値にし、
   // 数値にならないものは null＝不明のまま通す（かつては NaN が「足りている」に化けた）。
-  const ramRaw = manual.ramGB ?? scan.ramGB ?? null;
+  const useManualRam = manual.ramGB != null;
+  const ramRaw = useManualRam ? manual.ramGB : (scan.ramGB ?? null);
   const ramGB = (() => {
     if (ramRaw == null) return null;
     const n = Number(String(ramRaw).replace(/[^\d.]/g, ''));
     return Number.isFinite(n) && n > 0 ? n : null;
   })();
+  // 実装容量として読み直した時の元の数字。手入力の値には触らない
+  // （人が16と入れたものを別の数にしない）。
+  const ramReadAs = useManualRam ? null : (scan.ramReadAs ?? null);
 
   // ストレージは「入力があった項目だけ」上書きする。プルダウンが未選択（空）のまま
   // 送られた時に、スキャンで読めていた実物を空オブジェクトで消さない。
@@ -141,14 +229,25 @@ async function resolveNode(ctx, { parts, scan, input }) {
     os: manual.os ?? scan.os ?? null,
   };
 
+  // 画面が「次に何を撮ればいいか」を出せるように、何枚読めたかを持たせる。
+  machine.scanned = {
+    imageCount: scan.imageCount ?? 0,
+    readCount: scan.readCount ?? 0,
+    screens: scan.screens ?? [],
+    ramReadAs,
+  };
+
   machine.unresolved = [
     ...(cpuR.note ? [cpuR.note] : []),
     ...(gpuR.note ? [gpuR.note] : []),
     ...(ramGB == null ? ['メモリ容量が読めていない'] : []),
     ...(storage.type == null ? ['ストレージの種類（HDD/SSD）が読めていない'] : []),
+    // 複数のスクショが食い違った事実は、片方を黙って採らずにそのまま見せる。
+    ...(Array.isArray(scan.conflicts) ? scan.conflicts : []),
     // モデルが「読めなかった」と申告したものは、そのまま人間に見せる。捨てると
     // 「写真を読んだ上で問題なし」と「読めていない」の区別が画面から消える。
-    ...(Array.isArray(scan.unreadable) ? scan.unreadable.map(u => `写真から読めなかった: ${u}`) : []),
+    // 何枚目の話かは合流器が既に付けている（1枚についての事実なので）。
+    ...(Array.isArray(scan.unreadable) ? scan.unreadable : []),
   ];
 
   return machine;

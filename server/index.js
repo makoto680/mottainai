@@ -33,8 +33,10 @@ const SELFTEST_COUNT = (() => {
 })();
 
 const app = express();
-// 画像を base64 で受けるので既定の 100kb では足りない
-app.use(express.json({ limit: '12mb' }));
+// 画像を base64 で受けるので既定の 100kb では足りない。
+// 画面は最大4枚を送り、送る前に長辺2560pxのJPEGへ落としている（1枚1MB弱）。
+// 上限はその4枚が確実に通る側に置く。
+app.use(express.json({ limit: '20mb' }));
 
 // 静的配信は web/ の中だけに限定する（ルート直下を配ると設定ファイルまで出る）
 app.use(express.static(path.join(ROOT, 'web')));
@@ -97,7 +99,7 @@ app.post('/api/judge', async (req, res) => {
 app.use((err, _req, res, _next) => {
   const status = err.type === 'entity.too.large' ? 413 : 400;
   const message = err.type === 'entity.too.large'
-    ? '画像が大きすぎる（上限12MB）。スクリーンショットならそのまま、写真なら縮小してから送って。'
+    ? '画像が大きすぎる（上限20MB）。枚数を減らすか、写真なら縮小してから送って。'
     : 'リクエストが読み取れなかった。ページを再読み込みしてやり直して。';
   console.error('[request-error]', err.type ?? err.message);
   res.status(status).json({ error: message });

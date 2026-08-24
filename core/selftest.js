@@ -8,6 +8,7 @@
 
 import { judge, STATUS, judgeWindows11, cheapestSufficient } from './verdict.js';
 import { mergeRequirements, WORKLOADS } from './workloads.js';
+import { mergeScans, installedMemory } from './merge_scan.js';
 
 let pass = 0, fail = 0;
 function check(name, cond, extra = '') {
@@ -351,6 +352,91 @@ console.log('\n[13] VRAM不足は計算するだけでなく判定に効かせ�
   }, ['ai_local']);
   check('VRAM不明を0GBという測定値にしない', r2.parts.gpu.vram?.current == null);
   check('不明時はok=null（不足と断定しない）', r2.parts.gpu.vram?.ok === null);
+}
+
+console.log('\n[14] 複数のスクショを束ねるのはコード（モデルに決めさせない）');
+{
+  // 「設定→バージョン情報」には グラフィックとストレージが映っていない。だから
+  // 素人向けの経路は2枚になり、2枚が食い違った時に何を答えるかが判定の入口になる。
+
+  // 同じ数字を2回測っただけのズレ（実装16.0GB / タスクマネージャー15.9GB）は食い違いではない
+  const round = mergeScans([{ ramGB: 16 }, { ramGB: 15.9 }]);
+  check('丸め違いの容量は同じ値として16GBに落ちる', round.ramGB === 16, `(${round.ramGB})`);
+  check('丸め違いは食い違い扱いにしない', round.conflicts.length === 0);
+
+  // 本当に違う値なら、どちらかを採らずに「読めていない」に倒す
+  const clash = mergeScans([{ ramGB: 8 }, { ramGB: 16 }]);
+  check('本当に違う容量はnull（片方を勝手に採らない）', clash.ramGB === null);
+  check('食い違った事実を持ち帰る', clash.conflicts.some(c => /memory/i.test(c)));
+
+  // nvme と ssd は同じ事実の粒度違い。判定が使うのは「回転する円盤ではない」という一点
+  const solid = mergeScans([{ storage: { type: 'ssd' } }, { storage: { type: 'nvme' } }]);
+  check('ssdとnvmeは食い違いではなく細かい方を採る', solid.storage.type === 'nvme');
+
+  // HDDとSSDの両方が見えているのは、たいていCドライブでない方を見ている
+  const drives = mergeScans([{ storage: { type: 'hdd', gb: 1000 } }, { storage: { type: 'ssd', gb: 256 } }]);
+  check('HDDとSSDが両方出たら種類はnull', drives.storage.type === null);
+  check('種類が決まらないうちは容量も持たない', drives.storage.gb === null);
+
+  // 型番は文字列の段階で潰さない。同じチップの別表記かどうかを決めるのは resolve.js
+  const cpu = mergeScans([
+    { cpu: { name: 'Intel Core i5-1235U', confidence: 'low' } },
+    { cpu: { name: '12th Gen Intel(R) Core(TM) i5-1235U   1.30 GHz', confidence: 'high' } },
+  ]);
+  check('別表記は両方とも候補として残る', cpu.cpuCandidates.length === 2);
+  check('読めている方が先頭に来る', /12th Gen/.test(cpu.cpuCandidates[0]));
+
+  // 1枚読めなくても他の枚を巻き込まない。読めなかった事実は画面まで運ぶ
+  const partial = mergeScans([{ readError: 'timeout' }, { ramGB: 8, cpu: { name: 'TEST-CPU-M' } }]);
+  check('読めた枚数と送られた枚数を区別する', partial.imageCount === 2 && partial.readCount === 1);
+  check('失敗した画像があっても読めた分は生きる', partial.ramGB === 8);
+  check('読めなかった事実を黙って捨てない', partial.unreadable.some(u => u.includes('timeout')),
+    `(${partial.unreadable.join(' | ')})`);
+
+  // モックの印は最後まで落とさない（キー無しのデモが本物の読み取りに見えると、それ自体が嘘になる）
+  check('mockの印は合流後も残る', mergeScans([{ mocked: true }, { ramGB: 8 }]).mocked === true);
+
+  // 画像が1枚も無い時に、空の合流結果が「読んだ上で不明」に見えないこと
+  const none = mergeScans([]);
+  check('画像0枚なら全部null（0GBのような測定値を作らない）',
+    none.ramGB === null && none.storage.type === null && none.cpuCandidates.length === 0);
+
+  // 「image N:」が付いていること。2枚目で読めたものの横に、1枚目の
+  // 「この画面には映っていない」が全体の話として並ぶと画面が嘘をつく。
+  check('読めなかった注記は何枚目かを名乗る',
+    partial.unreadable.every(u => /^image \d+: /.test(u)), `(${partial.unreadable.join(' | ')})`);
+}
+
+console.log('\n[15] Windowsが言う容量を実装容量として読み直す');
+{
+  // タスクマネージャーは「OSが使える量」を出す。内蔵GPUなどが取った分だけ実装より小さい。
+  // 直さないと、16GBの機体が15.9GBとして必要ライン16に0.1足りず、
+  // 持っているメモリを買えと言われる。この道具が一番やってはいけない間違い方。
+  check('15.9GBは16GBの機体として読む', installedMemory(15.9).value === 16);
+  check('直した時は直す前の数字も持つ', installedMemory(15.9).readAs === 15.9);
+  check('3.9GBは4GBとして読む', installedMemory(3.9).value === 4);
+  check('ちょうどの値には触らない', installedMemory(16).value === 16 && installedMemory(16).readAs === null);
+
+  // 予約で説明できない開きは直さない。ここを緩めると「実際より多い」と言い始める
+  check('14GBは16GBに繰り上げない（2GBを予約する物は無い）', installedMemory(14).value === 14);
+  check('存在しない容量は作らない', installedMemory(50).value === 50);
+  check('不明はそのまま不明', installedMemory(null).value === null);
+
+  // 実際に判定まで通す。15.9のまま流れていた時は BLOCKER だった
+  const raw = judge({
+    cpu: { name: 'TEST-CPU-N', score: 20000, win11: true },
+    gpu: { name: 'TEST-GPU-N', score: 5000, integrated: false },
+    ramGB: 15.9, storage: { type: 'nvme', gb: 1000 },
+  }, ['photo']);
+  check('前提の確認：15.9GBのままだと16GB要求に足りない扱いになる',
+    raw.parts.ram.status === STATUS.BLOCKER, `(${raw.parts.ram.status})`);
+  const fixed = judge({
+    cpu: { name: 'TEST-CPU-N', score: 20000, win11: true },
+    gpu: { name: 'TEST-GPU-N', score: 5000, integrated: false },
+    ramGB: mergeScans([{ ramGB: 15.9 }]).ramGB, storage: { type: 'nvme', gb: 1000 },
+  }, ['photo']);
+  check('読み直した後は増設を勧めない', fixed.parts.ram.status !== STATUS.BLOCKER, `(${fixed.parts.ram.status})`);
+  check('見出しに買い物が出ない', fixed.summary.needSpend === 0 && fixed.summary.blockerCount === 0);
 }
 
 console.log(`\n=== ${pass} passed, ${fail} failed ===\n`);
