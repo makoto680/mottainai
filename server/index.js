@@ -21,6 +21,17 @@ try { process.loadEnvFile(path.join(ROOT, '.env')); } catch { /* 無ければ何
 
 const parts = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'parts.json'), 'utf8'));
 
+/**
+ * 自己検証の項目数はソースから数える。
+ * 画面に出す数字を手で書くと、テストを増やしたときに黙って古くなる（実際に一度そうなった）。
+ */
+const SELFTEST_COUNT = (() => {
+  try {
+    const src = fs.readFileSync(path.join(ROOT, 'core', 'selftest.js'), 'utf8');
+    return (src.match(/^\s*check\(/gm) ?? []).length;
+  } catch { return null; }
+})();
+
 const app = express();
 // 画像を base64 で受けるので既定の 100kb では足りない
 app.use(express.json({ limit: '12mb' }));
@@ -33,6 +44,7 @@ app.get('/api/health', (_req, res) => {
     ok: true,
     model: MODEL_ID,
     llm: process.env.GEMINI_API_KEY ? 'gemini' : 'mock',
+    selftest: SELFTEST_COUNT,
     data: { cpus: parts.cpus.length, gpus: parts.gpus.length, builtAt: parts.meta.builtAt },
   });
 });

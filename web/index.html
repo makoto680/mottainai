@@ -380,7 +380,7 @@ function escapeHtml(s){
 // ---- 起動 ----
 loadWorkloads();
 fetch('/api/health').then(r=>r.json()).then(h=>{
-  $('#foot').innerHTML = `判定エンジン <code>core/verdict.js</code>（モデル不使用・自己検証22項目）｜
+  $('#foot').innerHTML = `判定エンジン <code>core/verdict.js</code>（モデル不使用・自己検証${h.selftest ?? 38}項目）｜
     ベンチデータ CPU ${h.data.cpus}件 / GPU ${h.data.gpus}件（PassMark・出典つき）｜
     モデル <code>${h.model}</code>${h.llm==='mock'?'（未接続のため説明文は仮）':''}<br>
     用途ごとの必要ラインは自作PCの実地経験による編集判断であり、公式の数値そのままではない。`;
