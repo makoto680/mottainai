@@ -35,19 +35,26 @@ function resolversFor(parts) {
 
 const SCAN_PROMPT = `You are looking at ONE image from someone's Windows PC.
 
-It is most likely one of the two screens this tool asks people to capture:
-  - Settings > System > About — prints "Processor", "Installed RAM" and the Windows edition.
+It is most likely one of the screens this tool asks people to capture:
+  - Settings > System > About — prints "Processor", "Installed RAM", the Windows edition, and
+    on some versions a graphics card and a storage size as well.
+  - Defragment and Optimize Drives — one row per drive, with a "Media type" column saying
+    "Solid state drive" or "Hard disk drive" beside the drive letter.
   - Task Manager > Performance — the left column lists CPU, Memory, "Disk 0 (C:)" with SSD or
     HDD written beside it, and "GPU 0" with the graphics card name.
 It may instead be Device Manager, System Information, a spec sheet, the inside of a desktop,
 or a sticker on a laptop.
+
+The image is very often a CROP of one of those windows rather than the whole window — people
+are told to snip only the part that names something. That is expected, not a problem. Read
+what is in front of you and leave the rest null.
 
 Read only what is actually printed in this image. Never complete a model number you cannot
 see, and never fill a field from what you happen to know about that model.
 
 Return this shape:
 {
-  "screen":  "about|task-manager|device-manager|system-info|photo|other",
+  "screen":  "about|optimize-drives|task-manager|device-manager|system-info|photo|other",
   "cpu":     { "name": "<the processor line exactly as printed, or null>", "confidence": "high|medium|low" },
   "gpu":     { "name": "<the graphics card name exactly as printed, or 'integrated' if the image only says integrated/onboard, or null>", "confidence": "..." },
   "ramGB":   <installed memory in GB as a number, or null>,

@@ -195,18 +195,37 @@
       <div>
         <div class="st">Settings › System › About</div>
         <div class="sk"><kbd>Win</kbd> <kbd>I</kbd> → System → About</div>
-        <div class="sg">processor · installed memory · Windows edition</div>
+        <div class="sg">processor · installed memory · often the graphics card too</div>
       </div>
     </div>
     <div class="step">
       <div class="sn">2</div>
       <div>
-        <div class="st">Task Manager › Performance</div>
-        <div class="sk"><kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>Esc</kbd> → Performance</div>
-        <div class="sg">graphics card · whether the C: drive is an SSD or a hard disk</div>
+        <div class="st">Defragment and Optimize Drives</div>
+        <div class="sk">type <b>defrag</b> in the taskbar search — or <kbd>Win</kbd> <kbd>R</kbd> → <code>dfrgui</code></div>
+        <div class="sg">the “Media type” column beside C: — solid state drive, or hard disk drive</div>
       </div>
     </div>
   </div>
+
+  <p class="lead" style="background:#fdf3e3;border-left-color:#b8721a">
+    <b>Capture only the part that names something — a crop is fine, and so is one screen on its own.</b>
+    Every image is read on its own and the readings are put together afterwards, so nothing is lost by
+    sending a corner of a window instead of the whole thing. On step 2 you are only looking at it;
+    there is no button to press.
+  </p>
+
+  <details class="manual" id="gpuHint">
+    <summary>Playing games, editing video, or running AI locally? One more screen</summary>
+    <div class="body" style="font-size:13.5px;color:var(--ink-soft);padding-top:0">
+      For everything else — web, office, meetings, photos, programming — the graphics card is not
+      something this tool would ever tell you to buy, so it does not matter whether it was read.
+      For those heavier jobs it does. If step 1 did not print a graphics card, open
+      <b>Task Manager</b> (<kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>Esc</kbd>) → <b>Performance</b>,
+      and snip just the <b>GPU</b> row in the left-hand column. Only that row — the rest of that
+      window is not needed.
+    </div>
+  </details>
 
   <div class="drop" id="drop">
     <div class="big">Paste here, drop an image, or click to choose</div>
@@ -554,9 +573,9 @@ function render(d){
  */
 const SHOT_FOR = {
   cpu:     'Settings › System › About',
-  gpu:     'Task Manager › Performance',
+  gpu:     'Task Manager › Performance — the GPU row alone is enough',
   ram:     'Settings › System › About',
-  storage: 'Task Manager › Performance',
+  storage: 'Defragment and Optimize Drives — the row for C:',
 };
 const DRIVE_LABEL = { hdd:'Hard disk', ssd:'SSD', nvme:'NVMe SSD' };
 
