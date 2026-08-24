@@ -31,6 +31,18 @@
   - Gemma/Veo/Lyria等の追加Googleモデル統合（+0.2/個）→ 締切前の無理な増築はしない
 - リポジトリは**公開済みを確認**（makoto680/mottainai）＝審査用の権限付与は不要
 
+### ボーナス用の下書き（公開は本人判断・公開したらURLを提出フォームへ）
+
+- **制作記事（+0.2）**: `note_drafts\2026-08-25_mottainai_gyakuteian.md` に下書き済み
+  （逆張り断定＋一次体験の型。宣伝型は書かない）
+- **X投稿（+0.2）**: 下記をコピペ（⚠本文なしURLだけの投稿は伸びない事故が過去にあった。必ず本文ごと）
+
+> PC買い替え相談ツールは、日本語でも英語でも最後は全部「買え」で終わる。
+> 逆に「買わなくていい理由」を探すAIを作ってGoogleのハッカソンに出す。
+> 金額の判定はAIじゃなくコードがやる。テスト127項目。
+> #AllThingsAgenticHackathon
+> https://github.com/makoto680/mottainai
+
 ## 本番環境
 
 - **公開URL**: https://mottainai-720945218465.asia-northeast1.run.app
