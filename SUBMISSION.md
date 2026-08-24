@@ -11,7 +11,7 @@
 | Googleエージェントフレームワーク | Google ADK TypeScript `@google/adk` v2.0（Workflow） | ✅ |
 | Google Cloudインフラ | Cloud Run（asia-northeast1） | ✅ |
 | ホスト済みURL | **https://mottainai-720945218465.asia-northeast1.run.app** | ✅ |
-| コードリポジトリ | **https://github.com/makoto680/makoto0515** | ✅ |
+| コードリポジトリ | **https://github.com/makoto680/mottainai** | ✅ |
 | 構成図 | `ARCHITECTURE.md` | ✅ |
 | README（起動手順込み） | `README.md` | ✅ |
 | デモ動画 4分以内・英語または英語字幕 | 下の台本 | ⏸ |

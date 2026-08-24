@@ -4,3 +4,6 @@ _t*.mjs
 _probe*.mjs
 recordings/*.mp4
 recordings/*.mkv
+
+# Vendor benchmark dumps — redistribution not yet decided
+data/vendor/

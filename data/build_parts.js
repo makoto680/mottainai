@@ -9,44 +9,131 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { win11Support, LIST_SOURCES } from './win11_match.js';
+
 const DIR = path.dirname(fileURLToPath(import.meta.url));
+const VENDOR = path.join(DIR, 'vendor');
 const raw = JSON.parse(fs.readFileSync(path.join(DIR, 'research_raw.json'), 'utf8'));
 
 /** 検索用の正規化キー。型番のゆらぎ（空白・ハイフン・大小）を吸収する */
 const norm = s => String(s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
-const cpus = (raw.cpus ?? []).map(c => ({
-  name: c.model,
-  fullName: c.passmark_name ?? c.model,
-  vendor: c.vendor ?? null,
-  score: c.cpu_mark ?? null,           // 判定に使う総合スコア
-  singleThread: c.single_thread_mark ?? null,
-  cores: c.cores ?? null,
-  threads: c.threads ?? null,
-  tdp: c.tdp_w ?? null,
-  formFactor: c.form_factor ?? null,
-  generation: c.generation ?? null,
-  win11: c.win11_supported ?? null,
-  year: c.release_year ?? null,
-  source: c.source ?? null,
-  // 別名でも引けるようにしておく（"Core i5-7500" と "i5-7500" の両方）
-  aliases: [c.model, c.passmark_name, `Core ${c.model}`, `${c.vendor} ${c.model}`]
-    .filter(Boolean).map(norm),
-}));
+/**
+ * 部品表はPassMarkの全件データから作る。
+ *
+ * 手で選んだ125件では、素人が「このPC遅い」と悩んでいる機体が1件も引けなかった。
+ * Celeron・Pentium・Atom・Athlonが丸ごとゼロで、そこは安いノートの主戦場にあたる。
+ * 引けない型番は「判定できない」ではなく「この道具は使えない」と同じ意味になる。
+ */
+const vendorCpu = JSON.parse(fs.readFileSync(path.join(VENDOR, 'passmark_cpu_full.json'), 'utf8')).data;
+const vendorGpu = JSON.parse(fs.readFileSync(path.join(VENDOR, 'passmark_gpu_full.json'), 'utf8')).data;
 
-const gpus = (raw.gpus ?? []).map(g => ({
-  name: g.model,
-  fullName: g.passmark_name ?? g.model,
-  vendor: g.vendor ?? null,
-  score: g.g3d_mark ?? null,
-  vram: g.vram_gb ?? null,
-  tdp: g.tdp_w ?? null,
-  integrated: g.type === 'integrated',
-  year: g.release_year ?? null,
-  source: g.source ?? null,
-  aliases: [g.model, g.passmark_name, `${g.vendor} ${g.model}`]
-    .filter(Boolean).map(norm),
-}));
+const CPU_SOURCE = 'https://www.cpubenchmark.net/CPU_mega_page.html';
+const GPU_SOURCE = 'https://www.videocardbenchmark.net/GPU_mega_page.html';
+
+/** "5,784" → 5784。読めないもの（"NA"）は null で落とす。 */
+const num = s => {
+  const n = Number(String(s ?? '').replace(/,/g, '').trim());
+  return Number.isFinite(n) ? n : null;
+};
+const yearOf = d => { const m = String(d ?? '').match(/\b(\d{4})\b/); return m ? Number(m[1]) : null; };
+const textOr = s => (s == null || String(s).trim() === '' || String(s).trim() === 'NA') ? null : String(s).trim();
+
+const vendorOf = name =>
+  /\bamd\b|ryzen|athlon|epyc|threadripper/i.test(name) ? 'AMD'
+  : /\bintel\b|celeron|pentium|atom|xeon|core\s*i[3579]/i.test(name) ? 'Intel'
+  : /qualcomm|snapdragon/i.test(name) ? 'Qualcomm'
+  : /nvidia|geforce|quadro/i.test(name) ? 'NVIDIA'
+  : /radeon/i.test(name) ? 'AMD'
+  : null;
+
+/** "Intel Core i5-8250U @ 1.60GHz" → "i5-8250U"。人が口にする形に寄せる。 */
+function shortName(full) {
+  return String(full)
+    .replace(/@.*$/, '')
+    .replace(/^(Intel|AMD|Qualcomm|NVIDIA)\s+/i, '')
+    .replace(/^Core\s+(?=i[3579]\b)/i, '')
+    .trim();
+}
+
+/**
+ * PassMarkは性能コアと効率コアを別の列に持つ。掛けて足さないと数が合わない。
+ * i9-14900K は cores=8 logicals=2 secondaryCores=16 secondaryLogicals=1 で
+ * 24コア32スレッド。前者だけ見ると16スレッドという実在しない石になる。
+ */
+function coreCount(c) {
+  const p = num(c.cores), pl = num(c.logicals);
+  const e = num(c.secondaryCores) ?? 0, el = num(c.secondaryLogicals) ?? 0;
+  if (p == null) return { cores: null, threads: null };
+  return { cores: p + e, threads: pl == null ? null : p * pl + e * el };
+}
+
+const cpusRaw = vendorCpu.map(c => {
+  const { cores, threads } = coreCount(c);
+  const w = win11Support(c.name);
+  const short = shortName(c.name);
+  const vendor = vendorOf(c.name);
+  return {
+    name: short,
+    fullName: c.name,
+    vendor,
+    score: num(c.cpumark),               // 判定に使う総合スコア
+    singleThread: num(c.thread),
+    cores, threads,
+    tdp: num(c.tdp),
+    formFactor: textOr(c.cat) === 'Unknown' ? null : textOr(c.cat),
+    releasedOn: textOr(c.date),
+    year: yearOf(c.date),
+    win11: w.supported,
+    win11Basis: { matchedBy: w.matchedBy, reason: w.reason, source: w.source },
+    source: CPU_SOURCE,
+    aliases: [short, c.name, `Core ${short}`, `${vendor} ${short}`]
+      .filter(Boolean).map(norm),
+  };
+}).filter(c => c.score != null);
+
+/**
+ * 「リストに載っていない」の扱いは win11_match.js 側が持つ。
+ *
+ * 最初は発売日で線を引こうとしたが、これは誤りだった。Ryzen 5 7640S のように
+ * 古い世代の後出しモデルが2026年に登録されていて、線が未来に飛ぶ。
+ * 正しい軸は日付ではなく、リストが覆っている世代の範囲そのもの。
+ */
+const cpus = cpusRaw;
+
+/**
+ * 内蔵グラフィックの見分け。PassMarkの bus 列は3,013件中9件しか "Integrated" と
+ * 書いていないので、これだけでは使えない。名前で見分けたうえで、
+ * どちらで判断したかを integratedBasis に残す。判断の出どころが消えると検算できない。
+ */
+const IGPU_NAME = /\b(HD Graphics|UHD Graphics|Iris|Vega \d|Radeon Graphics|Radeon \d{3}M?\b|Graphics \d{3})\b/i;
+function integratedOf(g) {
+  if (g.bus === 'Integrated') return { integrated: true, basis: 'PassMark bus column' };
+  if (IGPU_NAME.test(g.name)) return { integrated: true, basis: 'integrated-graphics family name' };
+  return { integrated: false, basis: null };
+}
+
+const gpus = vendorGpu.map(g => {
+  const short = shortName(g.name);
+  const vendor = vendorOf(g.name);
+  const ig = integratedOf(g);
+  const vramMb = num(String(g.memSize ?? '').replace(/MB/i, ''));
+  return {
+    name: short,
+    fullName: g.name,
+    vendor,
+    score: num(g.g3d),
+    vram: vramMb ? Math.round(vramMb / 1024) : null,
+    tdp: num(g.tdp),
+    integrated: ig.integrated,
+    integratedBasis: ig.basis,
+    releasedOn: textOr(g.date),
+    year: yearOf(g.date),
+    formFactor: textOr(g.cat) === 'Unknown' ? null : textOr(g.cat),
+    source: GPU_SOURCE,
+    aliases: [short, g.name, `${vendor} ${short}`].filter(Boolean).map(norm),
+  };
+}).filter(g => g.score != null);
 
 /** "500GB" / "1TB" → GB数。読めないものは null で落とす。 */
 function capacityGb(s) {
@@ -168,11 +255,12 @@ const prices = {
 
 const out = {
   meta: {
-    builtFrom: 'research_raw.json',
+    builtFrom: 'vendor/passmark_*_full.json + vendor/ms_win11_*.json + research_raw.json',
     builtAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
     cpuCount: cpus.length,
     gpuCount: gpus.length,
     note: '数値は調査の生データをそのまま移送したもの。このスクリプトは値を作らない。',
+    win11Lists: LIST_SOURCES,
   },
   win11: raw.win11 ?? null,
   reference,
@@ -184,12 +272,11 @@ const out = {
 
 fs.writeFileSync(path.join(DIR, 'parts.json'), JSON.stringify(out, null, 1), 'utf8');
 
-const withScore = cpus.filter(c => c.score != null).length;
-const gWithScore = gpus.filter(g => g.score != null).length;
 const igpu = gpus.filter(g => g.integrated).length;
+const w = k => cpus.filter(c => c.win11 === k).length;
 console.log(`parts.json 生成`);
-console.log(`  CPU ${cpus.length}件（スコアあり ${withScore}）`);
-console.log(`  GPU ${gpus.length}件（スコアあり ${gWithScore} / 内蔵 ${igpu}）`);
+console.log(`  CPU ${cpus.length}件  Win11: 対応 ${w(true)} / 非対応 ${w(false)} / リスト外・判定不能 ${w(null)}`);
+console.log(`  GPU ${gpus.length}件（内蔵 ${igpu}）`);
 console.log(`  ストレージ候補 ${storageOptions.length}件: ${storageOptions.map(o => `${o.gb}GB/${o.yen.toLocaleString()}円`).join(', ') || 'なし'}`);
 console.log(`  メモリ候補 ${memoryOptions.length}件: ${memoryOptions.map(o => `${o.gb}GB/${o.yen.toLocaleString()}円`).join(', ') || 'なし'}`);
 console.log(`  基準点: ${reference ? reference.label+' '+reference.cpuName+' スコア'+reference.cpuScore+' / '+reference.machineYen.toLocaleString()+'円' : '取れず'}`);
