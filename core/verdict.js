@@ -17,6 +17,7 @@ export const STATUS = {
   TIGHT:    'TIGHT',     // 足りてはいるが余裕が薄い（今すぐ替える必要はない）
   KEEP:     'KEEP',      // 足りている。買うな
   OVERKILL: 'OVERKILL',  // 必要量を大きく超えている。過去の買いすぎ
+  UNKNOWN:  'UNKNOWN',   // 読めていない。「足りている」とも「足りない」とも言わない
 };
 
 /**
@@ -60,8 +61,15 @@ function upgradeWorthIt(fixYen, wholeMachineYen) {
   return { worthIt: true, ratio: Math.round(ratio * 100) / 100 };
 }
 
-/** 余裕率から状態を決める。ratio = 現在値 / 必要値 */
+/**
+ * 余裕率から状態を決める。ratio = 現在値 / 必要値
+ *
+ * NaNはどの比較もfalseになるため、以前はここを素通りして最後のKEEPに落ちていた。
+ * 「読めなかった」が「足りている＝買うな」に化ける＝間違う方向が一番悪い側だった。
+ * 不明のフェイルセーフは必ずUNKNOWN。買えとも買うなとも言わない。
+ */
 function classify(ratio, enoughRatio) {
+  if (!Number.isFinite(ratio)) return STATUS.UNKNOWN;
   if (ratio < 1) return STATUS.BLOCKER;
   if (ratio < 1.15) return STATUS.TIGHT;
   if (enoughRatio >= 1) return STATUS.OVERKILL;
@@ -124,30 +132,45 @@ function headroomLabel(ratio, refRatio) {
 
 function judgeScored(current, req, label, opts = {}) {
   const { unit = '', formatter = v => `${v}${unit}` } = opts;
+
+  // 値は数値だけを受ける。"4GB" のような文字列が入ると割り算がNaNになり、
+  // かつてはそれがKEEP（買うな）として画面に出ていた。数値化できないものは
+  // 測定値ではないので、判定せず「読めていない」で止める。
+  const value = (typeof current === 'string' && current.trim() !== '')
+    ? Number(String(current).replace(/[^\d.]/g, ''))
+    : current;
+  if (value == null || !Number.isFinite(value) || value <= 0) {
+    return {
+      key: label, status: STATUS.UNKNOWN, current: null,
+      required: req.need || null,
+      verdict: `${label}が読めていない。ここは「足りている」とも「足りない」とも言えない。`,
+    };
+  }
+
   if (!req.need) {
     return {
-      key: label, status: STATUS.KEEP, required: 0, current,
+      key: label, status: STATUS.KEEP, required: 0, current: value,
       headroom: null,
       verdict: 'この用途では性能を問われない項目。今のままでいい。',
     };
   }
-  const ratio = current / req.need;
-  const enoughRatio = req.enough ? current / req.enough : 0;
+  const ratio = value / req.need;
+  const enoughRatio = req.enough ? value / req.enough : 0;
   const status = classify(ratio, enoughRatio);
   const refScore = opts.referenceScore ?? null;
-  const refRatio = refScore ? current / refScore : null;
+  const refRatio = refScore ? value / refScore : null;
   return {
     key: label,
     status,
     level: levelOf(ratio).key,
     levelLabel: levelOf(ratio).label,
-    current,
+    current: value,
     required: req.need,
     enough: req.enough,
     ratio: Math.round(ratio * 100) / 100,
     vsReference: refRatio != null ? Math.round(refRatio * 100) / 100 : null,
     headroom: headroomLabel(ratio, refRatio),
-    currentLabel: formatter(current),
+    currentLabel: formatter(value),
     requiredLabel: formatter(req.need),
   };
 }
@@ -158,20 +181,23 @@ function judgeScored(current, req, label, opts = {}) {
  * 「BIOSの設定を変えるだけで済む（＝0円）」ケースを最優先で拾う。
  */
 export function judgeWindows11(machine, win11Data) {
-  const { cpu, tpm, secureBoot, os } = machine;
+  const { cpu, tpm, secureBoot } = machine;
   const out = { cost: 0, actions: [], blockers: [] };
 
-  const cpuSupported = cpu?.win11 === true;
+  // 3値。true=リストにある / false=リストが除外した / null=リストでは決められない。
+  // nullをfalseに潰すと、リストが追いついていないだけの現行CPU（Ryzen 9000等）に
+  // 「公式対応から外れている」と断定することになる。それはこの道具が一番やってはいけない嘘。
+  const cpuSupported = cpu ? (cpu.win11 ?? null) : null;
   // TPMが「無効」なだけなら有効化で解決する＝買い替え不要の最大要因
   const tpmFixableInBios = tpm === 'disabled' || tpm === 'unknown';
 
-  if (cpuSupported && tpm === 'enabled' && secureBoot !== false) {
+  if (cpuSupported === true && tpm === 'enabled' && secureBoot !== false) {
     out.eligible = true;
     out.headline = 'Windows 11 にそのまま上げられる。買い替えは不要。';
     return out;
   }
 
-  if (cpuSupported && tpmFixableInBios) {
+  if (cpuSupported === true && tpmFixableInBios) {
     out.eligible = true;
     out.headline = 'BIOS設定を変えるだけで Windows 11 に上げられる。費用は0円。';
     out.actions.push({
@@ -183,15 +209,37 @@ export function judgeWindows11(machine, win11Data) {
     return out;
   }
 
-  if (!cpuSupported) {
+  if (cpuSupported === null) {
+    const tool = win11Data?.official_check_tool;
+    out.eligible = null;
+    out.headline = cpu
+      ? 'Microsoft のリストではこのCPUの対応を確認できない。非対応と決まったわけではない。'
+      : 'CPUが読めていないので、Windows 11 の可否はまだ判定できない。';
+    if (cpu?.win11Basis?.reason) out.basis = cpu.win11Basis.reason;
+    out.actions.push({
+      cost: 0,
+      label: tool ? `${tool.name}（Microsoft公式）で実機を確認する` : 'Microsoft公式の確認アプリで実機を確認する',
+      detail: (tool?.note ?? 'どの要件で引っかかっているかを実機で正確に出せる。')
+            + (tool?.source ? ` ${tool.source}` : ''),
+    });
+    return out;
+  }
+
+  if (cpuSupported === false) {
     out.eligible = false;
     out.blockers.push('CPUが Microsoft の公式対応リストに入っていない');
     out.headline = 'Windows 11 の公式対応から外れている。ただし選択肢は買い替えだけではない。';
     // ここで「だから買い替えろ」と言わないのがこのツールの立場
+    const esu = win11Data?.consumer_esu ?? null;
+    const freeEsu = (esu?.enrollment_options ?? []).find(o => o.cost_usd === 0);
     out.alternatives = [
-      { cost: win11Data?.esu?.consumerPriceYen ?? null, label: 'ESU（拡張セキュリティ更新）で延長する',
-        detail: 'Windows 10 のまま、有償のセキュリティ更新だけを受け取る。'
-              + '期限が切れるまでの間に判断を先送りできる。' },
+      { cost: freeEsu ? 0 : null,
+        label: `ESU（拡張セキュリティ更新）で${esu?.coverage_end ?? '期限'}まで延長する`,
+        detail: (freeEsu
+          ? `無料の道がある（${freeEsu.option}）。Windows 10 のままセキュリティ更新だけを受け取り、`
+          : 'Windows 10 のままセキュリティ更新だけを受け取り、')
+          + '期限までの間、判断を先送りできる。'
+          + (esu?.source ? ` 出典: ${esu.source}` : '') },
       { cost: 0, label: 'Linux に載せ替える',
         detail: 'Web・動画・Office相当の用途しか使っていないなら、実用上ほぼ困らない。' },
       { cost: null, label: '買い替える',
@@ -221,14 +269,14 @@ export function judge(machine, workloadIds, opts = {}) {
 
   const parts = {};
 
-  parts.cpu = judgeScored(machine.cpu?.score ?? 0, req.cpu, 'CPU', {
+  parts.cpu = judgeScored(machine.cpu?.score ?? null, req.cpu, 'CPU', {
     formatter: v => `スコア ${v.toLocaleString()}`,
     referenceScore: opts.reference?.cpuScore ?? null,
   });
   parts.cpu.name = machine.cpu?.name ?? '不明';
 
   // GPU: 内蔵で足りる用途なら、そもそも「買う」対象から外す
-  const gpuScore = machine.gpu?.score ?? 0;
+  const gpuScore = machine.gpu?.score ?? null;
   const isIntegrated = machine.gpu?.integrated === true;
   if (req.gpu.need === 0) {
     parts.gpu = {
@@ -256,16 +304,24 @@ export function judge(machine, workloadIds, opts = {}) {
     parts.gpu.name = machine.gpu?.name ?? '不明';
     // VRAM は別軸（ローカルAI用途で効く）
     if (req.gpu.vramNeed) {
-      const vram = machine.gpu?.vram ?? 0;
+      const vram = machine.gpu?.vram ?? null;   // 読めていないものを0GBという測定値にしない
+      const ok = vram == null ? null : vram >= req.gpu.vramNeed;
       parts.gpu.vram = {
-        current: vram, required: req.gpu.vramNeed,
-        ok: vram >= req.gpu.vramNeed,
-        note: 'この用途はVRAM容量で動く・動かないが決まる。GPUの速さより優先。',
+        current: vram, required: req.gpu.vramNeed, ok,
+        note: vram == null
+          ? 'この用途はVRAM容量で動く・動かないが決まるが、VRAM容量が読めていない。'
+          : 'この用途はVRAM容量で動く・動かないが決まる。GPUの速さより優先。',
       };
+      // 速度が足りていてもVRAMが足りなければ動かない。計算しておいて判定に使わないのは
+      // 「知っていて黙る」なので、ここで判定に反映する。
+      if (ok === false && parts.gpu.status !== STATUS.BLOCKER) {
+        parts.gpu.status = STATUS.BLOCKER;
+        parts.gpu.verdict = `GPUの速度は足りているが、VRAMが${vram}GBで必要な${req.gpu.vramNeed}GBに届かない。この用途ではここが動く・動かないの境目。`;
+      }
     }
   }
 
-  parts.ram = judgeScored(machine.ramGB ?? 0, req.ram, 'メモリ', { unit: 'GB' });
+  parts.ram = judgeScored(machine.ramGB ?? null, req.ram, 'メモリ', { unit: 'GB' });
   if (parts.ram.status === STATUS.BLOCKER) {
     const pick = cheapestSufficient(prices.memory, req.ram.need);
     if (pick) {
@@ -274,7 +330,8 @@ export function judge(machine, workloadIds, opts = {}) {
       const worth = upgradeWorthIt(pick.yen, opts.usedMachineYen);
       if (worth && !worth.worthIt) {
         parts.ram.warning = worth.note;
-        parts.ram.fixCost = null;   // 勧められないものを必要出費に足さない
+        parts.ram.fixCost = null;      // 勧められないものを必要出費に足さない
+        parts.ram.fixDeclined = true;  // 「値段が無い」のではなく「勧めないと判定した」
       }
     }
   }
@@ -282,7 +339,16 @@ export function judge(machine, workloadIds, opts = {}) {
   // ストレージは「容量」より「SSDかどうか」が体感を決める
   const st = machine.storage ?? {};
   const isSsd = st.type === 'ssd' || st.type === 'nvme';
-  if (req.storage.ssdRequired && !isSsd) {
+  const stKnown = st.type === 'hdd' || isSsd;
+  if (!stKnown) {
+    // 「わからない」をHDD確定として扱うと、実物を一度も見ずに9,990円の買い物を
+    // 見出しに載せることになる。種類が読めていないなら判定しない。
+    parts.storage = {
+      key: 'ストレージ', status: STATUS.UNKNOWN, current: null,
+      verdict: 'HDDかSSDかが読めていない。ここが分かると判定が大きく変わる'
+             + '（HDD→SSDの換装は、CPUを替えるより体感が変わる一番安い一手）。',
+    };
+  } else if (req.storage.ssdRequired && !isSsd) {
     // 今と同じ容量に揃えるのではなく、用途に足りる中で一番安いものを充てる
     const pick = cheapestSufficient(prices.storage, req.storage.need);
     parts.storage = {
@@ -296,15 +362,20 @@ export function judge(machine, workloadIds, opts = {}) {
         : null,
     };
   } else {
-    const capOk = (st.gb ?? 0) >= req.storage.need;
+    // 容量が読めていないのに「手狭」と言わない。SSDであること自体が体感の決め手で、
+    // 容量は読めた時だけ判定する。
+    const capKnown = Number.isFinite(st.gb) && st.gb > 0;
+    const capOk = capKnown && st.gb >= req.storage.need;
     parts.storage = {
       key: 'ストレージ',
-      status: capOk ? STATUS.KEEP : STATUS.TIGHT,
-      current: `${st.type === 'nvme' ? 'NVMe SSD' : 'SSD'} ${st.gb ?? '?'}GB`,
+      status: !capKnown ? STATUS.KEEP : capOk ? STATUS.KEEP : STATUS.TIGHT,
+      current: `${st.type === 'nvme' ? 'NVMe SSD' : 'SSD'}${capKnown ? ' ' + st.gb + 'GB' : ''}`,
       required: `${req.storage.need}GB`,
-      verdict: capOk
-        ? 'SSDが入っていて容量も足りている。替える理由がない。'
-        : '容量は手狭だが、外付けや増設で足りる。本体を替える理由にはならない。',
+      verdict: !capKnown
+        ? 'SSDが入っている。替える理由がない（容量は読めていないが、足りなくなっても外付けで済む話）。'
+        : capOk
+          ? 'SSDが入っていて容量も足りている。替える理由がない。'
+          : '容量は手狭だが、外付けや増設で足りる。本体を替える理由にはならない。',
     };
   }
 
@@ -313,13 +384,22 @@ export function judge(machine, workloadIds, opts = {}) {
   // ---- 集計 ----
   const blockers = Object.values(parts).filter(p => p.status === STATUS.BLOCKER);
   const overkill = Object.values(parts).filter(p => p.status === STATUS.OVERKILL);
+  const unknowns = Object.values(parts).filter(p => p.status === STATUS.UNKNOWN);
 
-  // 実際に必要な出費＝下限を割っている部位だけ
-  const needSpend = blockers.reduce((sum, p) => sum + (p.fixCost ?? 0), 0);
+  // 実際に必要な出費＝下限を割っている部位のうち、値段が引けたものの合計。
+  // 値段の無い部位（CPU/GPUの交換、勧められないと判定した増設）が混ざっている時に
+  // 合計だけを出すと「¥9,990で全部直る」に読める。足りない部位に値の付かないものが
+  // あるなら、その名前を必ず横に持つ。¥0を「確定した答え」の顔で出さない。
+  const pricedBlockers = blockers.filter(p => p.fixCost != null);
+  const unpricedBlockers = blockers.filter(p => p.fixCost == null);
+  const needSpend = pricedBlockers.reduce((sum, p) => sum + p.fixCost, 0);
 
-  // 販売サイトが薦めてくる金額との差＝「使わずに済んだ額」
+  // 販売サイトが薦めてくる金額との差＝「使わずに済んだ額」。
+  // 値の付かない不足や不明部位が残っている間は、節約額を言い切れない。
   const marketSpend = market?.totalYen ?? null;
-  const saved = marketSpend != null ? Math.max(0, marketSpend - needSpend) : null;
+  const saved = (marketSpend != null && unpricedBlockers.length === 0 && unknowns.length === 0)
+    ? Math.max(0, marketSpend - needSpend)
+    : null;
 
   return {
     workloads: req.workloads.map(w => ({ id: w.id, label: w.label, note: w.note })),
@@ -330,18 +410,48 @@ export function judge(machine, workloadIds, opts = {}) {
     horizon: '判定しているのは「今の要求に対する現在地」だけ。'
            + 'この先どれだけ要求が上がるかは誰にも読めないので、何年もつかは言わない。',
     summary: {
-      keepEverything: blockers.length === 0,
+      keepEverything: blockers.length === 0 && unknowns.length === 0,
       blockerCount: blockers.length,
       overkillCount: overkill.length,
+      unknownCount: unknowns.length,
+      unknownParts: unknowns.map(p => p.key),
       needSpend,
+      needSpendIsComplete: unpricedBlockers.length === 0,
+      unpricedParts: unpricedBlockers.map(p => p.key),
       marketSpend,
       saved,
-      headline: buildHeadline(blockers, overkill, needSpend, win11),
+      headline: buildHeadline({ blockers, overkill, unknowns, needSpend, unpricedBlockers, win11 }),
     },
   };
 }
 
-function buildHeadline(blockers, overkill, needSpend, win11) {
+function buildHeadline({ blockers, overkill, unknowns, needSpend, unpricedBlockers, win11 }) {
+  // 読めていない部位があるうちは、全体の結論をどちら向きにも言い切らない。
+  // 「買うな」も「買え」も、読めていないものの上には乗せられない。
+  if (unknowns.length) {
+    const names = unknowns.map(u => u.key).join('と');
+    if (blockers.length) {
+      return `「${blockers.map(b => b.key).join('と')}」は足りていない。`
+           + `ただし「${names}」が読めていないので、全体の結論はまだ出せない。`;
+    }
+    return `読めた範囲に足りない部位は無い。ただし「${names}」が読めていないので、`
+         + `「買わなくていい」とはまだ言い切れない。`;
+  }
+
+  // 出費の言い方：値段が引けていない不足があるなら、合計を確定額の顔で出さない
+  const spendPhrase = () => {
+    if (unpricedBlockers.length) {
+      const declined = unpricedBlockers.filter(b => b.fixDeclined);
+      const missing = unpricedBlockers.filter(b => !b.fixDeclined);
+      const bits = [];
+      if (needSpend) bits.push(`${needSpend.toLocaleString()}円`);
+      if (missing.length) bits.push(`「${missing.map(b => b.key).join('と')}」の代金（価格未取得）`);
+      if (declined.length) bits.push(`「${declined.map(b => b.key).join('と')}」は増設を勧めない判定（本文参照）`);
+      return bits.join('＋');
+    }
+    return needSpend ? `${needSpend.toLocaleString()}円` : '';
+  };
+
   // 「0円で解決」と言えるのは、本当に他に出費が無い時だけ。
   // Windows 11 の話だけを見て 0円 と書くと、足りていない部位の出費を隠すことになる。
   const biosOnly = win11 && win11.eligible === true && win11.cost === 0 && win11.actions.length;
@@ -349,7 +459,7 @@ function buildHeadline(blockers, overkill, needSpend, win11) {
     return '0円で解決する。BIOSの設定を1つ変えるだけ。';
   }
   if (biosOnly && blockers.length) {
-    const yen = needSpend ? `${needSpend.toLocaleString()}円` : '';
+    const yen = spendPhrase();
     return `Windows 11 側は0円で済む（BIOS設定のみ）。`
          + `別に「${blockers.map(b => b.key).join('と')}」が足りていない${yen ? `＝${yen}` : ''}。`;
   }
@@ -360,8 +470,8 @@ function buildHeadline(blockers, overkill, needSpend, win11) {
     return `買う必要のあるものは1つもない。${tail}`;
   }
   if (blockers.length === 1) {
-    const yen = needSpend ? `約${needSpend.toLocaleString()}円で済む。` : '';
-    return `替えるのは「${blockers[0].key}」の1点だけ。${yen}本体の買い替えは不要。`;
+    const yen = spendPhrase();
+    return `替えるのは「${blockers[0].key}」の1点だけ。${yen ? `${yen}。` : ''}本体の買い替えは不要。`;
   }
-  return `足りていないのは${blockers.length}点。それ以外は今のままでいい。`;
+  return `足りていないのは${blockers.length}点${unpricedBlockers.length ? `（うち「${unpricedBlockers.map(b => b.key).join('と')}」は価格未取得）` : ''}。それ以外は今のままでいい。`;
 }

@@ -41,8 +41,10 @@ export async function runFleet(input, deps = {}) {
     // ワークフロー自身が出したイベントだけを拾う。
     // 個々のノードのイベントには実行コンテキストがぶら下がっており、循環参照を含む。
     if (ev?.author === 'mottainai_fleet' && ev.output) {
-      const { machine, workloads, verdict, narration } = ev.output;
-      out = { machine, workloads, verdict, narration };
+      const { machine, workloads, verdict, narration, scan } = ev.output;
+      // mockの印を落とさない。キー無し環境で「画像を読んだ」顔の固定値が
+      // 本物の判定と並ぶと、デモがそのまま嘘になる。
+      out = { machine, workloads, verdict, narration, scanMocked: scan?.mocked === true };
     }
   }
 

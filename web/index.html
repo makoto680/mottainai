@@ -106,6 +106,7 @@
   .b-TIGHT{background:#f3f0e8;color:var(--ink-soft)}
   .b-OVERKILL{background:#eef3f7;color:var(--accent)}
   .b-BLOCKER{background:var(--stop-bg);color:var(--stop)}
+  .b-UNKNOWN{background:#eef1f4;color:#5b6b7a;border:1px dashed #b8c4cf}
 
   .narr{background:#fdfbf7;border-left:3px solid var(--accent);padding:16px 20px;border-radius:0 9px 9px 0;margin-top:8px;font-size:14.5px;white-space:pre-wrap}
   .alt{border:1px solid var(--line);border-radius:10px;padding:13px 16px;margin-top:9px}
@@ -252,7 +253,10 @@ async function suggest(kind, q, listId){
   try{
     const r = await (await fetch(`/api/parts?kind=${kind}&q=${encodeURIComponent(q)}`)).json();
     const dl = document.getElementById(listId);
-    dl.innerHTML = r.map(p => `<option value="${p.name}">${p.fullName}${p.win11===false?'（Win11非対応）':''}</option>`).join('');
+    // win11はtrue/false/nullの3値。nullは「リストで確認できない」であって非対応ではない。
+    const w11 = p => p.win11===false ? '（Win11非対応）' : p.win11===null ? '（Win11要確認）' : '';
+    const esc = s => String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+    dl.innerHTML = r.map(p => `<option value="${esc(p.name)}">${esc(p.fullName)}${w11(p)}</option>`).join('');
   }catch(e){}
 }
 $('#cpu').oninput = e => suggest('cpu', e.target.value, 'cpuList');
@@ -317,16 +321,28 @@ function render(d){
   const keep = s.keepEverything;
 
   let h = `<div class="card">
-    <h2>結果</h2>
-    <div class="headline ${keep?'keep':'fix'}">${s.headline}</div>`;
-
-  h += `<div class="money ${keep?'':'fix'}">
-      <div class="m-item"><div class="k">実際に必要な出費</div><div class="v">${yen(s.needSpend)}</div></div>`;
-  if(s.marketSpend != null){
-    h += `<div class="m-item"><div class="k">よくある診断の薦め</div><div class="v" style="text-decoration:line-through;color:var(--ink-soft)">${yen(s.marketSpend)}</div></div>
-          <div class="m-item"><div class="k">使わずに済む</div><div class="v big">${yen(s.saved)}</div></div>`;
+    <h2>結果</h2>`;
+  if(d.scanMocked){
+    h += `<div class="warn"><b>画像は読めていない</b><br>モデル未接続のため、写真の読み取り結果はデモ用の固定値。この判定を実機の答えとして使わないこと。</div>`;
   }
-  h += `</div>`;
+  h += `<div class="headline ${keep?'keep':'fix'}">${s.headline}</div>`;
+
+  // 金額の箱。値段の付かない不足（CPU/GPU交換等）が残っている時に「¥0」を確定額の
+  // 顔で出さない。読めていない部位がある時は金額の箱そのものを出さない（計算できていない）。
+  if(s.unknownCount){
+    h += `<div class="warn"><b>金額はまだ出せない</b><br>「${(s.unknownParts??[]).map(escapeHtml).join('」「')}」が読めていないため、必要な出費を計算できない。</div>`;
+  } else {
+    h += `<div class="money ${keep?'':'fix'}">
+      <div class="m-item"><div class="k">実際に必要な出費</div><div class="v">${yen(s.needSpend)}${s.needSpendIsComplete===false?'<span style="font-size:12px;font-weight:400">＋α</span>':''}</div></div>`;
+    if(s.marketSpend != null && s.saved != null){
+      h += `<div class="m-item"><div class="k">よくある診断の薦め</div><div class="v" style="text-decoration:line-through;color:var(--ink-soft)">${yen(s.marketSpend)}</div></div>
+            <div class="m-item"><div class="k">使わずに済む</div><div class="v big">${yen(s.saved)}</div></div>`;
+    }
+    h += `</div>`;
+    if(s.needSpendIsComplete===false){
+      h += `<div class="warn" style="margin-top:8px">「${(s.unpricedParts??[]).map(escapeHtml).join('」「')}」の価格は未取得のため、上の額には含まれていない。</div>`;
+    }
+  }
 
   if(d.narration) h += `<div class="narr">${escapeHtml(d.narration)}</div>`;
   h += `</div>`;
@@ -334,7 +350,7 @@ function render(d){
   // 部位ごと
   h += `<div class="card"><h2>部位ごとの判定</h2><table>
     <tr><th>部位</th><th>今</th><th>判定</th><th></th></tr>`;
-  const LBL = {KEEP:'替えなくていい', TIGHT:'余裕は薄い', OVERKILL:'余りすぎ', BLOCKER:'ここだけ足りない'};
+  const LBL = {KEEP:'替えなくていい', TIGHT:'余裕は薄い', OVERKILL:'余りすぎ', BLOCKER:'ここだけ足りない', UNKNOWN:'読めていない'};
   for(const [k,p] of Object.entries(v.parts)){
     let note = p.verdict ?? p.headroom ?? '';
     if(p.fixWith){

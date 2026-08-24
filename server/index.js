@@ -58,11 +58,15 @@ app.get('/api/workloads', (_req, res) => {
 
 /** 型番の候補を返す（手入力の補助） */
 app.get('/api/parts', (req, res) => {
-  const q = String(req.query.q ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const q = String(req.query.q ?? '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 64);
   const kind = req.query.kind === 'gpu' ? 'gpus' : 'cpus';
   if (!q) return res.json([]);
+  // 並びはPassMarkの提出数（＝実際に世の中にある数）。ファイル順のままだと、
+  // 誰も持っていない組み込み向けの型番が、その人が実際に持っている主流品を
+  // 12件の枠から押し出してしまう。
   const hits = parts[kind]
     .filter(p => (p.aliases ?? []).some(a => a.includes(q)))
+    .sort((a, b) => (b.samples ?? 0) - (a.samples ?? 0))
     .slice(0, 12)
     .map(p => ({ name: p.name, fullName: p.fullName, score: p.score, win11: p.win11, year: p.year }));
   res.json(hits);
@@ -86,6 +90,17 @@ app.post('/api/judge', async (req, res) => {
     console.error('[judge]', e);
     res.status(500).json({ error: e.message });
   }
+});
+
+// 壊れたリクエスト（JSONの構文エラー・12MB超の画像など）にHTMLのスタックトレースを
+// 返さない。フロントはJSONを期待しているので、読める言葉のJSONで返す。
+app.use((err, _req, res, _next) => {
+  const status = err.type === 'entity.too.large' ? 413 : 400;
+  const message = err.type === 'entity.too.large'
+    ? '画像が大きすぎる（上限12MB）。スクリーンショットならそのまま、写真なら縮小してから送って。'
+    : 'リクエストが読み取れなかった。ページを再読み込みしてやり直して。';
+  console.error('[request-error]', err.type ?? err.message);
+  res.status(status).json({ error: message });
 });
 
 const port = process.env.PORT || 8080;

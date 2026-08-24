@@ -41,9 +41,17 @@ export function geminiLlm(apiKey) {
     return client;
   }
 
-  async function call(input) {
+  /**
+   * タイムアウトつきの呼び出し。モデル側が黙り込むとリクエストが永遠にぶら下がり、
+   * 確定済みの判定まで返せなくなる。実測は1呼び出し4〜5秒なので60秒は十分すぎる猶予。
+   */
+  async function call(input, timeoutMs = 60_000) {
     const ai = await getClient();
-    const res = await ai.interactions.create({ model: MODEL_ID, input });
+    const res = await Promise.race([
+      ai.interactions.create({ model: MODEL_ID, input }),
+      new Promise((_, rej) => setTimeout(
+        () => rej(new Error(`モデルの応答が${timeoutMs / 1000}秒以内に返らなかった`)), timeoutMs).unref?.()),
+    ]);
     return res.output_text ?? '';
   }
 
@@ -63,6 +71,9 @@ export function geminiLlm(apiKey) {
      * 400 Unknown parameter 'parts' で弾かれる（実測）。
      */
     async visionJson(prompt, imageBase64, mimeType = 'image/jpeg') {
+      // ブラウザはtypeを空文字で寄越すことがある。既定値は undefined にしか効かないので
+      // ここで潰す（空のmime_typeはAPI側で400になる）。
+      mimeType = mimeType || 'image/jpeg';
       const data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
       const input = [
         { type: 'image', data, mime_type: mimeType },

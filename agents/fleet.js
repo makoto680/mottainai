@@ -15,6 +15,15 @@
 import { Workflow, node } from '@google/adk';
 import { judge } from '../core/verdict.js';
 import { WORKLOAD_LIST } from '../core/workloads.js';
+import { buildResolvers } from '../core/resolve.js';
+
+/** 照合器は部品表ごとに1回だけ組む（掃除済みキーの前計算があるため） */
+const RESOLVER_CACHE = new WeakMap();
+function resolversFor(parts) {
+  if (!parts) return null;
+  if (!RESOLVER_CACHE.has(parts)) RESOLVER_CACHE.set(parts, buildResolvers(parts));
+  return RESOLVER_CACHE.get(parts);
+}
 
 const SCAN_PROMPT = `You are looking at a photo or screenshot from someone's computer.
 It may be: the inside of a desktop PC, a Device Manager / System Information screen,
@@ -72,53 +81,74 @@ async function workloadNode(ctx, { input, llm }) {
 async function resolveNode(ctx, { parts, scan, input }) {
   scan = scan ?? {};
   const manual = input?.manual ?? {};
-
-  const norm = s => String(s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
-
-  const lookup = (kind, name) => {
-    if (!name) return null;
-    const table = parts?.[kind] ?? [];
-    const key = norm(name);
-    if (!key) return null;
-
-    // 別名まで含めた完全一致を最優先
-    const exact = table.find(p => (p.aliases ?? [norm(p.name)]).includes(key));
-    if (exact) return exact;
-
-    // 次に「型番が丸ごと含まれている」ケース。
-    // 逆向き（データ側が入力に含まれる）は i5-7500 が i5-750 を掴むような事故を起こすので取らない。
-    const contained = table.filter(p => (p.aliases ?? []).some(a => a.includes(key)));
-    // 候補が1つに絞れる時だけ採用する。複数該当は「不明」にして黙って別型番を掴まない
-    return contained.length === 1 ? contained[0] : null;
-  };
+  const R = resolversFor(parts);
 
   const cpuName = manual.cpu ?? scan.cpu?.name ?? null;
   const gpuName = manual.gpu ?? scan.gpu?.name ?? null;
 
-  const cpu = lookup('cpus', cpuName);
+  // 照合は core/resolve.js（両側を同じ掃除にかけ、重複行を吸収し、
+  // 決められない時は候補つきで正直に保留する）。
+  // 引けなかった部品に score:0 を置かない。0は「測定した結果ゼロだった」という
+  // 意味の数字で、「読めていない」とは別物。ここを混ぜると、実在の8コア機に
+  // 「スコア0だから買い替えろ」と言う事故になる（実際に起きかけた）。
+  const resolvePart = (kind, name) => {
+    if (!name || !R) return { part: null, note: null };
+    const r = R[kind](name);
+    if (r.picked) return { part: r.picked, note: null };
+    const cands = (r.candidates ?? []).map(c => c.name).slice(0, 4);
+    const note = cands.length
+      ? `${kind === 'cpu' ? 'CPU' : 'GPU'}「${name}」は1つに決められない（候補: ${cands.join(' / ')}）`
+      : `${kind === 'cpu' ? 'CPU' : 'GPU'}「${name}」はベンチデータに無い`;
+    return { part: { name, score: null, unresolved: true, candidates: cands }, note };
+  };
+
+  const cpuR = resolvePart('cpu', cpuName);
 
   // 「内蔵」「integrated」のような一般名は型番ではないので、照合ではなく種別として扱う。
   // 型番が引けなくても「内蔵である」ことは判定に使える情報なので、不明として捨てない。
   const GENERIC_IGPU = /^(内蔵|オンボード|integrated|igpu|onboard|cpu内蔵|なし|none)$/i;
   const isGenericIgpu = gpuName && GENERIC_IGPU.test(String(gpuName).trim());
-  const gpu = isGenericIgpu
-    ? { name: '内蔵グラフィック', integrated: true, score: null, generic: true }
-    : lookup('gpus', gpuName);
+  const gpuR = isGenericIgpu
+    ? { part: { name: '内蔵グラフィック', integrated: true, score: null, generic: true }, note: null }
+    : resolvePart('gpu', gpuName);
+
+  // メモリはモデルや手入力から文字列で来ることがある（"8GB"）。単位を読んで数値にし、
+  // 数値にならないものは null＝不明のまま通す（かつては NaN が「足りている」に化けた）。
+  const ramRaw = manual.ramGB ?? scan.ramGB ?? null;
+  const ramGB = (() => {
+    if (ramRaw == null) return null;
+    const n = Number(String(ramRaw).replace(/[^\d.]/g, ''));
+    return Number.isFinite(n) && n > 0 ? n : null;
+  })();
+
+  // ストレージは「入力があった項目だけ」上書きする。プルダウンが未選択（空）のまま
+  // 送られた時に、スキャンで読めていた実物を空オブジェクトで消さない。
+  const stScan = scan.storage ?? {};
+  const stManual = manual.storage ?? {};
+  const storage = {
+    type: stManual.type || stScan.type || null,
+    gb: Number.isFinite(stManual.gb) ? stManual.gb
+      : Number.isFinite(stScan.gb) ? stScan.gb : null,
+  };
 
   const machine = {
-    cpu: cpu ?? (cpuName ? { name: cpuName, score: 0, unresolved: true } : null),
-    gpu: gpu ?? (gpuName ? { name: gpuName, score: 0, unresolved: true } : null),
-    ramGB: manual.ramGB ?? scan.ramGB ?? null,
-    storage: manual.storage ?? scan.storage ?? {},
+    cpu: cpuR.part,
+    gpu: gpuR.part,
+    ramGB,
+    storage,
     tpm: manual.tpm ?? scan.tpm ?? 'unknown',
     secureBoot: manual.secureBoot ?? null,
     os: manual.os ?? scan.os ?? null,
   };
 
   machine.unresolved = [
-    ...(cpuName && !cpu ? [`CPU「${cpuName}」はベンチデータに無い`] : []),
-    ...(gpuName && !gpu && !isGenericIgpu ? [`GPU「${gpuName}」はベンチデータに無い`] : []),
-    ...(machine.ramGB == null ? ['メモリ容量が読めていない'] : []),
+    ...(cpuR.note ? [cpuR.note] : []),
+    ...(gpuR.note ? [gpuR.note] : []),
+    ...(ramGB == null ? ['メモリ容量が読めていない'] : []),
+    ...(storage.type == null ? ['ストレージの種類（HDD/SSD）が読めていない'] : []),
+    // モデルが「読めなかった」と申告したものは、そのまま人間に見せる。捨てると
+    // 「写真を読んだ上で問題なし」と「読めていない」の区別が画面から消える。
+    ...(Array.isArray(scan.unreadable) ? scan.unreadable.map(u => `写真から読めなかった: ${u}`) : []),
   ];
 
   return machine;
@@ -129,7 +159,12 @@ async function resolveNode(ctx, { parts, scan, input }) {
  * 金額に関わる結論はここだけで出す。
  */
 async function verdictNode(ctx, { machine, workloads, win11Data, prices, market, usedMachineYen, reference }) {
-  const ids = workloads?.workloads ?? ['office'];
+  // モデルが返した用途IDを鵜呑みにしない。実在しないIDは落とし、
+  // 全部落ちたら一番軽い用途に倒す（軽い側に間違える方が、売りつける側に間違えるよりまし）。
+  const known = new Set(WORKLOAD_LIST.map(w => w.id));
+  const rawIds = workloads?.workloads ?? [];
+  const ids = rawIds.filter(id => known.has(id));
+  if (!ids.length) ids.push('office');
   const result = judge(machine, ids, {
     win11Data: win11Data ?? null,
     prices: prices ?? {},
@@ -195,7 +230,14 @@ export function buildFleet(deps = {}) {
       // ★ 金額に関わる判断はここだけ。モデルは関与しない
       const verdictResult = await run(verdict, { ...base, machine, workloads });
 
-      const narration = await run(narrate, { ...base, verdict: verdictResult });
+      // 語りは飾り。モデル側が落ちても、確定済みの判定を道連れにしない。
+      let narration = null;
+      try {
+        narration = await run(narrate, { ...base, verdict: verdictResult });
+      } catch (e) {
+        narration = null;
+        verdictResult.narrationError = `語りの生成に失敗（判定への影響なし）: ${e.message}`;
+      }
 
       return { scan: scanned, machine, workloads, verdict: verdictResult, narration };
     },

@@ -258,5 +258,100 @@ console.log('\n[8] 「0円」と言えるのは本当に他の出費が無い時
   console.log(`       → "${r.summary.headline}"`);
 }
 
+console.log('\n[9] 「読めていない」を「足りている」に化けさせない');
+{
+  // かつて "4GB" のような文字列が NaN になり、classify の全条件をすり抜けて
+  // KEEP（買うな）として画面に出ていた。不明のフェイルセーフは必ずUNKNOWN。
+  const base = {
+    cpu: { name: 'TEST-CPU-H', score: 20000, win11: true },
+    gpu: { name: 'TEST-GPU-H', score: 20000, integrated: false },
+    storage: { type: 'nvme', gb: 1000 },
+    tpm: 'enabled', secureBoot: true,
+  };
+  const r = judge({ ...base, ramGB: 'えへへ' }, ['video_4k']);
+  check('数値化できないメモリ値はUNKNOWNになる', r.parts.ram.status === STATUS.UNKNOWN);
+  check('UNKNOWNがあると「買うな」と言い切らない', r.summary.keepEverything === false);
+  check('見出しが読めていない事実を言う', /読めていない/.test(r.summary.headline), `(${r.summary.headline})`);
+  const r2 = judge({ ...base, ramGB: '8GB' }, ['office']);
+  check('単位つき文字列 "8GB" は8として読む', r2.parts.ram.current === 8);
+  console.log(`       → "${r.summary.headline}"`);
+}
+
+console.log('\n[10] 空の入力から買い物リストを作らない');
+{
+  // かつては何も入力しなくても「3点足りない・¥25,790」が出ていた。
+  // 何も読めていないなら、判定はどちら向きにも出せない。
+  const r = judge({ cpu: null, gpu: null, ramGB: null, storage: {} }, ['office'], {
+    prices: { memory: [{ gb: 16, yen: 15800 }], storage: [{ gb: 500, yen: 9990 }] },
+  });
+  check('CPUはUNKNOWN（スコア0の捏造をしない）', r.parts.cpu.status === STATUS.UNKNOWN);
+  check('ストレージはUNKNOWN（HDD扱いにしない）', r.parts.storage.status === STATUS.UNKNOWN);
+  check('必要出費は積まれない', r.summary.needSpend === 0);
+  check('BLOCKERは1つも無い', r.summary.blockerCount === 0);
+  console.log(`       → "${r.summary.headline}"`);
+}
+
+console.log('\n[11] Windows 11 の3値：リスト外をfalseに潰さない');
+{
+  // リストが追いついていないCPU（win11:null）に「公式対応から外れている」と
+  // 断定しない。それは「リストで確認できない」であって「非対応」ではない。
+  const nullCpu = { name: 'TEST-CPU-I', score: 60000,
+    win11: null, win11Basis: { reason: 'past where the list stops' } };
+  const w = judgeWindows11({ cpu: nullCpu, tpm: 'enabled', secureBoot: true },
+    { official_check_tool: { name: 'PC Health Check', note: 'test', source: 'https://example.com' } });
+  check('eligibleはnull（falseではない）', w.eligible === null);
+  check('「対応リストに入っていない」と断定しない', w.blockers.length === 0);
+  check('公式の確認手段を案内する', w.actions.some(a => /PC Health Check/.test(a.label)));
+  check('確認できない旨を見出しで言う', /確認できない/.test(w.headline), `(${w.headline})`);
+  const wFalse = judgeWindows11({ cpu: { name: 'X', score: 1, win11: false }, tpm: 'enabled' },
+    { consumer_esu: { coverage_end: '2027-10-12',
+        enrollment_options: [{ option: 'Free - sync', cost_usd: 0 }] } });
+  check('本当の非対応は従来どおりfalse', wFalse.eligible === false);
+  check('無料のESUの道が代替案に出る',
+    wFalse.alternatives?.some(a => a.cost === 0 && /ESU/.test(a.label)),
+    `(${JSON.stringify(wFalse.alternatives?.map(a => [a.label, a.cost]))})`);
+  console.log(`       → "${w.headline}"`);
+}
+
+console.log('\n[12] 値段の付かない不足を¥0の顔で隠さない');
+{
+  // CPUが足りない（＝交換価格データが無い）時、「実際に必要な出費 ¥0」ではなく
+  // 「価格未取得」だと分かる形で返す。
+  const r = judge({
+    cpu: { name: 'TEST-CPU-J', score: 3000, win11: true },
+    gpu: { name: 'TEST-GPU-J', score: 20000, integrated: false },
+    ramGB: 16, storage: { type: 'ssd', gb: 500 },
+  }, ['game_fhd']);
+  check('CPUが足りないと判定される', r.parts.cpu.status === STATUS.BLOCKER);
+  check('出費の合計が「完全ではない」と分かる', r.summary.needSpendIsComplete === false);
+  check('価格未取得の部位名が入る', r.summary.unpricedParts.includes('CPU'));
+  check('見出しにも価格未取得が出る', /価格未取得/.test(r.summary.headline), `(${r.summary.headline})`);
+  console.log(`       → "${r.summary.headline}"`);
+}
+
+console.log('\n[13] VRAM不足は計算するだけでなく判定に効かせる');
+{
+  // 速度が足りていてもVRAMが足りなければその用途は動かない。
+  // 計算しておいて判定に使わないのは「知っていて黙る」。
+  const r = judge({
+    cpu: { name: 'TEST-CPU-K', score: 30000, win11: true },
+    gpu: { name: 'TEST-GPU-K', score: 25000, integrated: false, vram: 4 },
+    ramGB: 32, storage: { type: 'nvme', gb: 1000 },
+  }, ['ai_local']);
+  // 分岐で走ったり走らなかったりするテストを置かない。画面の「自己検証N項目」は
+  // このファイルの check() を数えて出しているので、実行数と数えが1でもズレたら
+  // その数字自体が嘘になる。
+  check('ai_localはVRAM要件を持つ（前提の確認）', mergeRequirements(['ai_local'])?.gpu?.vramNeed > 4);
+  check('VRAM不足でBLOCKERになる', r.parts.gpu.status === STATUS.BLOCKER, `(${r.parts.gpu.status})`);
+  check('本文がVRAMを名指しする', /VRAM/.test(r.parts.gpu.verdict ?? ''), `(${r.parts.gpu.verdict})`);
+  const r2 = judge({
+    cpu: { name: 'TEST-CPU-K', score: 30000, win11: true },
+    gpu: { name: 'TEST-GPU-K2', score: 25000, integrated: false, vram: null },
+    ramGB: 32, storage: { type: 'nvme', gb: 1000 },
+  }, ['ai_local']);
+  check('VRAM不明を0GBという測定値にしない', r2.parts.gpu.vram?.current == null);
+  check('不明時はok=null（不足と断定しない）', r2.parts.gpu.vram?.ok === null);
+}
+
 console.log(`\n=== ${pass} passed, ${fail} failed ===\n`);
 process.exit(fail ? 1 : 0);
