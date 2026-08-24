@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MOTTAINAI — 買わなくていい理由を探すエージェント</title>
+<title>MOTTAINAI — the agent that hunts for reasons NOT to buy</title>
 <style>
   :root{
     --paper:#fbf8f3;
@@ -170,12 +170,12 @@
 <header>
   <div class="brand">
     <h1>MOTTAINAI</h1>
-    <span class="jp">もったいない</span>
+    <span class="jp">もったいない — "too good to waste"</span>
   </div>
   <p class="tagline">
-    世の中のPC診断は、全部「もっと良いものを買え」と言う。<br>
-    これは逆を調べるエージェント。<b>買わなくていい理由</b>を先に探して、
-    どうしても足りない1点だけを教える。
+    Every PC checker out there ends the same way: "buy something better."<br>
+    This agent investigates the opposite. It hunts for <b>reasons you do not need to buy</b> first,
+    and only then names the one thing that truly falls short.
   </p>
 </header>
 
@@ -272,7 +272,7 @@
     </div>
   </details>
 
-  <h2 style="margin-top:26px">2 — 何に使っているか</h2>
+  <h2 style="margin-top:26px">2 — What this machine is used for</h2>
   <div class="chips" id="chips"></div>
 
   <button class="go" id="go">Check this machine</button>
@@ -280,11 +280,11 @@
 
 <!-- フリート -->
 <div class="card hide" id="fleetCard">
-  <h2>エージェントが動いている</h2>
+  <h2>The fleet is working</h2>
   <div class="fleet" id="fleet"></div>
   <div class="fleet-note">
-    金額に関わる判断は <b>verdict</b> だけが行い、そこにモデルは入らない。
-    モデルは「見る」と「言葉にする」だけを担当する。
+    Every decision that touches money is made by <b>verdict</b> alone — no model in that box.
+    The models only look, and put things into words.
   </div>
 </div>
 
@@ -296,7 +296,7 @@
 </div>
 
 <script>
-const WORKLOAD_FALLBACK = [{id:'office',label:'Web・動画視聴・Office（事務）'}];
+const WORKLOAD_FALLBACK = [{id:'office',label:'Web, video, office work'}];
 const MAX_IMAGES = 4;          // 揃えるべき画面は2枚。上限は撮り直しの余裕を見た数
 const MAX_EDGE   = 2560;       // 送る前に落とす長辺。小さい文字が潰れない範囲で上限を切る
 let workloads = [], picked = new Set(['office']), images = [], shotSeq = 0;
@@ -345,7 +345,11 @@ async function addFiles(fileList){
   for(const f of [...(fileList ?? [])]){
     if(!f.type?.startsWith('image/')) continue;
     if(images.length >= MAX_IMAGES) break;
-    images.push(await prepare(f));
+    const shot = await prepare(f);
+    // 上限はawaitの後にもう一度見る。デコード中に別経路（貼り付け＋ドロップ）から
+    // 足されると、上のチェックだけでは5枚目がすり抜ける。
+    if(images.length >= MAX_IMAGES) break;
+    images.push(shot);
     renderShelf();
   }
 }
@@ -408,7 +412,7 @@ async function suggest(kind, q, listId){
     const r = await (await fetch(`/api/parts?kind=${kind}&q=${encodeURIComponent(q)}`)).json();
     const dl = document.getElementById(listId);
     // win11はtrue/false/nullの3値。nullは「リストで確認できない」であって非対応ではない。
-    const w11 = p => p.win11===false ? '（Win11非対応）' : p.win11===null ? '（Win11要確認）' : '';
+    const w11 = p => p.win11===false ? ' (no Win11 support)' : p.win11===null ? ' (Win11: unconfirmed)' : '';
     const esc = s => String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
     dl.innerHTML = r.map(p => `<option value="${esc(p.name)}">${esc(p.fullName)}${w11(p)}</option>`).join('');
   }catch(e){}
@@ -435,8 +439,11 @@ function renderFleet(state){
 // ---- 実行 ----
 $('#go').onclick = async () => {
   const btn = $('#go'); btn.disabled = true;
-  btn.textContent = images.length
-    ? `Reading ${images.length} image${images.length > 1 ? 's' : ''}…`
+  // 数えるのは実際に送れる枚数。読み込みに失敗した棚の1枚を「Reading 1 image…」と
+  // 数えると、直後の結果が「画像は送られていない」になり画面が矛盾する。
+  const sendable = images.filter(im => im.dataUrl).length;
+  btn.textContent = sendable
+    ? `Reading ${sendable} image${sendable > 1 ? 's' : ''}…`
     : 'Checking…';
   $('#fleetCard').classList.remove('hide');
   $('#result').innerHTML = '';
@@ -455,7 +462,7 @@ $('#go').onclick = async () => {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         images: images.filter(im => im.dataUrl).map(im => ({ data: im.dataUrl, mimeType: im.mimeType })),
-        workloads: [...picked], manual, lang:'ja',
+        workloads: [...picked], manual, lang:'en',
       }),
     });
     const data = await res.json();
@@ -463,7 +470,7 @@ $('#go').onclick = async () => {
     const done = {}; AGENTS.forEach(a => done[a.id]='done'); renderFleet(done);
     render(data);
   }catch(e){
-    $('#result').innerHTML = `<div class="card"><div class="warn">失敗した: ${escapeHtml(e.message)}</div></div>`;
+    $('#result').innerHTML = `<div class="card"><div class="warn">Something failed: ${escapeHtml(e.message)}</div></div>`;
     renderFleet({});
   }
   btn.disabled = false; btn.textContent = 'Check again';
@@ -478,45 +485,47 @@ function render(d){
   const keep = s.keepEverything;
 
   let h = `<div class="card">
-    <h2>結果</h2>`;
+    <h2>The verdict</h2>`;
   if(d.scanMocked){
-    h += `<div class="warn"><b>画像は読めていない</b><br>モデル未接続のため、写真の読み取り結果はデモ用の固定値。この判定を実機の答えとして使わないこと。</div>`;
+    h += `<div class="warn"><b>The image was NOT read</b><br>No model is connected, so the "reading" is a fixed demo value. Do not treat this verdict as an answer about a real machine.</div>`;
   }
   h += `<div class="headline ${keep?'keep':'fix'}">${s.headline}</div>`;
 
   // 金額の箱。値段の付かない不足（CPU/GPU交換等）が残っている時に「¥0」を確定額の
   // 顔で出さない。読めていない部位がある時は金額の箱そのものを出さない（計算できていない）。
   if(s.unknownCount){
-    h += `<div class="warn"><b>金額はまだ出せない</b><br>「${(s.unknownParts??[]).map(escapeHtml).join('」「')}」が読めていないため、必要な出費を計算できない。</div>`;
+    h += `<div class="warn"><b>No price can be named yet</b><br>${(s.unknownParts??[]).map(escapeHtml).join(' and ')} could not be read, so the required spend cannot be computed.</div>`;
   } else {
     h += `<div class="money ${keep?'':'fix'}">
-      <div class="m-item"><div class="k">実際に必要な出費</div><div class="v">${yen(s.needSpend)}${s.needSpendIsComplete===false?'<span style="font-size:12px;font-weight:400">＋α</span>':''}</div></div>`;
+      <div class="m-item"><div class="k">What actually needs spending</div><div class="v">${yen(s.needSpend)}${s.needSpendIsComplete===false?'<span style="font-size:12px;font-weight:400"> + more</span>':''}</div></div>`;
     if(s.marketSpend != null && s.saved != null){
-      h += `<div class="m-item"><div class="k">よくある診断の薦め</div><div class="v" style="text-decoration:line-through;color:var(--ink-soft)">${yen(s.marketSpend)}</div></div>
-            <div class="m-item"><div class="k">使わずに済む</div><div class="v big">${yen(s.saved)}</div></div>`;
+      h += `<div class="m-item"><div class="k">What a typical checker recommends</div><div class="v" style="text-decoration:line-through;color:var(--ink-soft)">${yen(s.marketSpend)}</div></div>
+            <div class="m-item"><div class="k">Stays in your pocket</div><div class="v big">${yen(s.saved)}</div></div>`;
     }
     h += `</div>`;
     if(s.needSpendIsComplete===false){
-      h += `<div class="warn" style="margin-top:8px">「${(s.unpricedParts??[]).map(escapeHtml).join('」「')}」の価格は未取得のため、上の額には含まれていない。</div>`;
+      h += `<div class="warn" style="margin-top:8px">No price is on file for ${(s.unpricedParts??[]).map(escapeHtml).join(' and ')}, so it is not part of the figure above.</div>`;
     }
   }
 
   if(d.narration) h += `<div class="narr">${escapeHtml(d.narration)}</div>`;
+  else if(v.narrationError) h += `<div style="font-size:12px;color:var(--ink-soft);margin-top:8px">
+    The plain-words narration failed to generate. The verdict above is computed without any model, so it stands as-is.</div>`;
   h += `</div>`;
 
   h += readBackCard(d);
 
   // 部位ごと
-  h += `<div class="card"><h2>部位ごとの判定</h2><table>
-    <tr><th>部位</th><th>今</th><th>判定</th><th></th></tr>`;
-  const LBL = {KEEP:'替えなくていい', TIGHT:'余裕は薄い', OVERKILL:'余りすぎ', BLOCKER:'ここだけ足りない', UNKNOWN:'読めていない'};
+  h += `<div class="card"><h2>Part by part</h2><table>
+    <tr><th>Part</th><th>Now</th><th>Verdict</th><th></th></tr>`;
+  const LBL = {KEEP:'keep it', TIGHT:'little slack', OVERKILL:'far beyond need', BLOCKER:'the shortfall', UNKNOWN:'not read'};
   for(const [k,p] of Object.entries(v.parts)){
     let note = p.verdict ?? p.headroom ?? '';
     if(p.fixWith){
       note += `<br><b style="color:var(--fix)">${escapeHtml(p.fixWith.label ?? '')} ${p.fixWith.yen?yen(p.fixWith.yen):''}</b>`;
       if(p.fixNote) note += `<br>${escapeHtml(p.fixNote)}`;
-      if(p.fixWith.basis === 'low') note += `<br><span style="color:var(--ink-soft)">※この額は最安値。代表値は未取得。</span>`;
-      if(p.fixWith.unverifiedPrice) note += `<br><span style="color:var(--stop)">※この値段は裏が取れていない。実売を自分で確認してから買うこと。</span>`;
+      if(p.fixWith.basis === 'low') note += `<br><span style="color:var(--ink-soft)">* This is the lowest price seen, not a typical one.</span>`;
+      if(p.fixWith.unverifiedPrice) note += `<br><span style="color:var(--stop)">* This price is unverified. Check a real listing yourself before buying.</span>`;
     }
     if(p.warning) note += `<br><b style="color:var(--stop)">${escapeHtml(p.warning)}</b>`;
     h += `<tr>
@@ -528,10 +537,10 @@ function render(d){
   }
   h += `</table>`;
   if(v.horizon) h += `<div class="warn" style="background:#f4f7fa;border-color:#c9d9e8">
-    <b>年数では言わない理由</b><br>${escapeHtml(v.horizon)}</div>`;
+    <b>Why there is no "years left" here</b><br>${escapeHtml(v.horizon)}</div>`;
   if(v.reference) h += `<div style="font-size:12px;color:var(--ink-soft);margin-top:10px">
-    比較の基準＝<b>${escapeHtml(v.reference.label)}</b>（${escapeHtml(v.reference.detail)}・${yen(v.reference.machineYen)}）。
-    CPUスコア ${v.reference.cpuScore.toLocaleString()}。${escapeHtml(v.reference.caveat ?? '')}</div>`;
+    Reference machine = <b>${escapeHtml(v.reference.label)}</b> (${escapeHtml(v.reference.detail)}, ${yen(v.reference.machineYen)}).
+    CPU score ${v.reference.cpuScore.toLocaleString()}. ${escapeHtml(v.reference.caveat ?? '')}</div>`;
   h += `</div>`;
 
   // Windows 11
@@ -539,9 +548,9 @@ function render(d){
     h += `<div class="card"><h2>Windows 11</h2>
       <div style="font-size:16px;font-weight:600;margin-bottom:8px">${escapeHtml(v.win11.headline)}</div>`;
     for(const a of (v.win11.actions ?? []))
-      h += `<div class="alt"><div class="t">${escapeHtml(a.label)} <span class="c">${a.cost===0?'0円':''}</span></div><div class="d">${escapeHtml(a.detail)}</div></div>`;
+      h += `<div class="alt"><div class="t">${escapeHtml(a.label)} <span class="c">${a.cost===0?'¥0':''}</span></div><div class="d">${escapeHtml(a.detail)}</div></div>`;
     for(const a of (v.win11.alternatives ?? []))
-      h += `<div class="alt"><div class="t">${escapeHtml(a.label)} ${a.cost===0?'<span class="c">0円</span>':''}</div><div class="d">${escapeHtml(a.detail)}</div></div>`;
+      h += `<div class="alt"><div class="t">${escapeHtml(a.label)} ${a.cost===0?'<span class="c">¥0</span>':''}</div><div class="d">${escapeHtml(a.detail)}</div></div>`;
     h += `</div>`;
   }
 
@@ -554,8 +563,8 @@ function render(d){
   const blocking = notes.filter(n => !/^image \d+: /.test(n));
   const show = [...blocking, ...(s.unknownCount ? perImage : [])];
   if(show.length){
-    h += `<div class="card"><div class="warn"><b>読み取れなかったもの</b><br>${show.map(escapeHtml).join('<br>')}<br>
-      <span style="color:var(--ink-soft)">分からないものは推測せず、そのまま「不明」として扱っている。</span></div></div>`;
+    h += `<div class="card"><div class="warn"><b>What could not be read</b><br>${show.map(escapeHtml).join('<br>')}<br>
+      <span style="color:var(--ink-soft)">Nothing here was guessed at — whatever could not be read is carried as "unknown", as is.</span></div></div>`;
   }
 
   $('#result').innerHTML = h;
@@ -585,11 +594,15 @@ function readBackCard(d){
   const st = m.storage ?? {};
 
   const gpuName = m.gpu?.generic ? 'Integrated graphics' : (m.gpu?.fullName || m.gpu?.name);
+  // 選ばれた用途がGPUを要求しない（required 0）なら、読めていなくても答えは変わらない。
+  // その行を「未読＝答え未完成」に数えると、上の結論と読み合わせ表が矛盾する。
+  const gpuNeeded = (d.verdict?.parts?.gpu?.required ?? 0) > 0;
   const rows = [
     { k:'Processor',    got: m.cpu && !m.cpu.unresolved ? (m.cpu.fullName || m.cpu.name) : null,
       raw: m.cpu?.unresolved ? m.cpu.name : null, shot: SHOT_FOR.cpu },
     { k:'Graphics',     got: m.gpu && !m.gpu.unresolved ? gpuName : null,
-      raw: m.gpu?.unresolved ? m.gpu.name : null, shot: SHOT_FOR.gpu },
+      raw: m.gpu?.unresolved ? m.gpu.name : null, shot: SHOT_FOR.gpu,
+      optional: !gpuNeeded },
     { k:'Memory',       got: m.ramGB ? `${m.ramGB} GB` : null, shot: SHOT_FOR.ram,
       // 直した数字は、直す前も一緒に出す。補正を信じてもらう必要がなくなる。
       aside: scanned.ramReadAs
@@ -600,7 +613,7 @@ function readBackCard(d){
       shot: SHOT_FOR.storage },
   ];
 
-  const missing = rows.filter(r => !r.got);
+  const missing = rows.filter(r => !r.got && !r.optional);
   // 全部揃っていて、しかも画像も使っていないなら、この表は何も足さない
   if(!scanned.imageCount && !missing.length) return '';
 
@@ -617,13 +630,15 @@ function readBackCard(d){
       <td class="v">${r.got ? escapeHtml(r.got) + ' <span class="ok">✓</span>' : 'not read'}
         ${r.raw ? `<div class="next">read as “${escapeHtml(r.raw)}”, but that does not pin down one part</div>` : ''}
         ${r.aside ? `<div class="next" style="color:var(--ink-soft)">${escapeHtml(r.aside)}</div>` : ''}
-        ${r.got ? '' : `<div class="next">→ ${r.shot}</div>`}
+        ${r.got || r.raw ? '' : r.optional
+          ? `<div class="next" style="color:var(--ink-soft)">not needed for the workloads picked — the verdict stands either way</div>`
+          : `<div class="next">→ ${r.shot}</div>`}
       </td></tr>`;
   }
   h += `</table>`;
   if(missing.length){
     h += `<div class="warn" style="margin-top:14px">
-      ${missing.length} of the 4 things this tool judges ${missing.length > 1 ? 'are' : 'is'} still unread,
+      ${missing.length} of the things this tool judges ${missing.length > 1 ? 'are' : 'is'} still unread,
       so the answer above is not finished. Capture the screen named beside each one and paste it in —
       the earlier images stay.</div>`;
   }
@@ -637,12 +652,12 @@ function escapeHtml(s){
 // ---- 起動 ----
 loadWorkloads();
 fetch('/api/health').then(r=>r.json()).then(h=>{
-  $('#foot').innerHTML = `判定エンジン <code>core/verdict.js</code>（モデル不使用・自己検証${h.selftest ?? 38}項目）｜
-    ベンチデータ CPU ${h.data.cpus}件 / GPU ${h.data.gpus}件
-    （CPU Mark / G3D Mark, courtesy of <a href="https://www.cpubenchmark.net/" target="_blank" rel="noopener">PassMark Software</a>・行ごとに出典あり）｜
-    Windows 11の対応可否は<a href="https://learn.microsoft.com/en-us/windows-hardware/design/minimum/supported/windows-11-24h2-supported-intel-processors" target="_blank" rel="noopener">Microsoftの公開リスト</a>と照合｜
-    モデル <code>${h.model}</code>${h.llm==='mock'?'（未接続のため説明文は仮）':''}<br>
-    用途ごとの必要ラインは自作PCの実地経験による編集判断であり、公式の数値そのままではない。`;
+  $('#foot').innerHTML = `Verdict engine <code>core/verdict.js</code> (no model in the loop · ${h.selftest ?? 38} self-test assertions) |
+    benchmark data: ${h.data.cpus} CPUs / ${h.data.gpus} GPUs
+    (CPU Mark / G3D Mark, courtesy of <a href="https://www.cpubenchmark.net/" target="_blank" rel="noopener">PassMark Software</a>, per-row source links) |
+    Windows 11 eligibility checked against <a href="https://learn.microsoft.com/en-us/windows-hardware/design/minimum/supported/windows-11-24h2-supported-intel-processors" target="_blank" rel="noopener">Microsoft's published lists</a> |
+    model <code>${h.model}</code>${h.llm==='mock'?' (not connected — narration is placeholder)':''}<br>
+    The per-workload "needed lines" are editorial judgement from decades of building PCs, not official figures.`;
 }).catch(()=>{});
 </script>
 </body>

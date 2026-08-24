@@ -72,14 +72,19 @@ const cleanName = s => {
 
 const nameKey = s => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
 
-/** Parse a number that may arrive as "16", 16, "16.0 GB" or "15.9/16.0 GB". */
+/** Parse a number that may arrive as "16", 16, "16.0 GB", "15.9/16.0 GB" or "16,384 MB". */
 function toNumber(v) {
   if (v == null) return null;
   if (typeof v === 'number') return Number.isFinite(v) && v > 0 ? v : null;
-  // "15.9/16.0 GB" — the installed size is the larger side, so take the last number.
-  const all = String(v).match(/\d+(\.\d+)?/g);
+  // Digit grouping first: "16,384" is one number, not sixteen and then 384.
+  const s = String(v).replace(/,/g, '');
+  const all = s.match(/\d+(\.\d+)?/g);
   if (!all?.length) return null;
-  const n = Math.max(...all.map(Number));
+  // "15.9/16.0 GB" — the installed size is the larger side, so take the larger number.
+  let n = Math.max(...all.map(Number));
+  // System Information and BIOS screens print RAM in megabytes ("16384 MB").
+  // Same quantity, different unit — convert instead of misreading it as 16,384 GB.
+  if (/mb/i.test(s) && !/gb/i.test(s)) n = n / 1024;
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
@@ -87,12 +92,20 @@ function toNumber(v) {
  * Collapse several readings of one physical quantity.
  * Within tolerance they are the same thing measured twice → keep the larger (the
  * installed size; the smaller reading is Windows subtracting what is reserved).
+ *
+ * opts.maxGapGb switches the tolerance from a ratio to an additive cap. Memory needs
+ * the additive rule: the only legitimate drift between two readings is the hardware
+ * reserve, and that is at most ~1 GB regardless of how much is installed. A ratio
+ * would quietly declare 14 and 16 "the same" (12.5% apart) and promote the pair to
+ * 16 — manufacturing memory the machine may not have, with no conflict recorded.
  */
-function mergeNumeric(values, label) {
+function mergeNumeric(values, label, opts = {}) {
+  const { maxGapGb = null } = opts;
   const nums = values.map(toNumber).filter(n => n != null);
   if (!nums.length) return { value: null, conflict: null };
   const max = Math.max(...nums), min = Math.min(...nums);
-  if (max / min <= NUMERIC_TOLERANCE) return { value: max, conflict: null };
+  const agree = maxGapGb != null ? (max - min <= maxGapGb) : (max / min <= NUMERIC_TOLERANCE);
+  if (agree) return { value: max, conflict: null };
   return {
     value: null,
     conflict: `${label}: the screenshots do not agree (${[...new Set(nums)].join(' / ')}). `
@@ -115,7 +128,7 @@ function mergeStorageType(values) {
       value: null,
       conflict: 'System drive: one screenshot shows a hard disk and another shows an SSD. '
               + 'If this PC has both, the one that matters is the drive holding C: — '
-              + 'send the Task Manager shot with that drive selected.',
+              + 'capture the Defragment and Optimize Drives window, the row for C: alone.',
     };
   }
   if (set.has('hdd')) return { value: 'hdd', conflict: null };
@@ -134,11 +147,13 @@ function mergeStorageType(values) {
 function mergeNames(entries) {
   const seen = new Map();
   for (const e of entries) {
-    const name = cleanName(e?.name);
+    // The model is asked for {name, confidence} but sometimes answers with the bare
+    // string. A readable answer in the wrong envelope is still a readable answer.
+    const name = cleanName(typeof e === 'string' ? e : e?.name);
     if (!name) continue;
     const key = nameKey(name);
     if (!key) continue;
-    const rank = rankOf(e?.confidence);
+    const rank = rankOf(typeof e === 'string' ? null : e?.confidence);
     const prev = seen.get(key);
     if (!prev || rank > prev.rank) seen.set(key, { name, rank, order: prev?.order ?? seen.size });
   }
@@ -161,13 +176,27 @@ function mergeTpm(values) {
 export function mergeScans(scans) {
   const list = (scans ?? []).filter(s => s && typeof s === 'object');
 
-  const ramReported = mergeNumeric(list.map(s => s.ramGB), 'Installed memory');
+  // Memory uses the additive gap (the hardware reserve, ~1 GB) — see mergeNumeric.
+  const ramReported = mergeNumeric(list.map(s => s.ramGB), 'Installed memory',
+    { maxGapGb: RESERVED_HEADROOM_GB });
   const ram = installedMemory(ramReported.value);
-  const storageType = mergeStorageType(list.map(s => s.storage?.type));
+
+  let storageType = mergeStorageType(list.map(s => s.storage?.type));
+  const sizeMerge = mergeNumeric(list.map(s => s.storage?.gb), 'System drive size');
+  // Disagreeing sizes are evidence the screenshots looked at DIFFERENT drives.
+  // A type claim that came from only one of them can no longer be pinned to C:,
+  // so it does not survive — otherwise a shot of a data HDD would put an SSD
+  // purchase in the headline while C: may be an SSD already.
+  if (storageType.value && sizeMerge.conflict) {
+    storageType = {
+      value: null,
+      conflict: 'System drive: the drive sizes read differently across the screenshots '
+              + '— they are probably different drives, and which one holds C: cannot be '
+              + 'told from here. Capture the Defragment and Optimize Drives window, the row for C: alone.',
+    };
+  }
   // Capacity is only meaningful once the drives agree on what they are.
-  const storageGb = storageType.value
-    ? mergeNumeric(list.map(s => s.storage?.gb), 'System drive size')
-    : { value: null, conflict: null };
+  const storageGb = storageType.value ? sizeMerge : { value: null, conflict: null };
 
   // 「この画面には映っていない」は、その画像1枚についての事実であって、
   // 全体についての事実ではない。番号を付けずに並べると、2枚目で実際に読めた
@@ -178,7 +207,14 @@ export function mergeScans(scans) {
     return notes.map(u => `image ${i + 1}: ${u}`);
   }))];
 
-  const conflicts = [ramReported.conflict, storageType.conflict, storageGb.conflict].filter(Boolean);
+  // The Windows edition is a single fact too. Two different readings → not known.
+  const osNames = [...new Set(list.map(s => cleanName(s.os)).filter(Boolean))];
+  const osConflict = osNames.length > 1
+    ? `Windows edition: the screenshots do not agree (${osNames.join(' / ')}).`
+    : null;
+
+  const conflicts = [ramReported.conflict, storageType.conflict, storageGb.conflict, osConflict]
+    .filter(Boolean);
 
   return {
     imageCount: list.length,
@@ -194,7 +230,7 @@ export function mergeScans(scans) {
     ramReadAs: ram.readAs,
     storage: { type: storageType.value, gb: storageGb.value },
     tpm: mergeTpm(list.map(s => s.tpm)),
-    os: list.map(s => cleanName(s.os)).find(Boolean) ?? null,
+    os: osNames.length === 1 ? osNames[0] : null,
 
     unreadable,
     conflicts,

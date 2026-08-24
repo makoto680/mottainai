@@ -9,6 +9,7 @@
 import { judge, STATUS, judgeWindows11, cheapestSufficient } from './verdict.js';
 import { mergeRequirements, WORKLOADS } from './workloads.js';
 import { mergeScans, installedMemory } from './merge_scan.js';
+import { buildResolvers } from './resolve.js';
 
 let pass = 0, fail = 0;
 function check(name, cond, extra = '') {
@@ -168,7 +169,7 @@ console.log('\n[6] Windows 11：BIOS設定だけで解決するケースを最�
   const w2 = judgeWindows11(unsupported, { esu: { consumerPriceYen: 4000 } });
   check('非対応でも買い替え以外の道を必ず示す', w2.alternatives?.length >= 2);
   check('買い替えは最後の選択肢として置かれる',
-    w2.alternatives[w2.alternatives.length - 1].label.includes('買い替え'));
+    w2.alternatives[w2.alternatives.length - 1].label.includes('Replace'));
 }
 
 console.log('\n[7] 余力は検算できる倍率で示す（年数に変換しない）');
@@ -181,10 +182,10 @@ console.log('\n[7] 余力は検算できる倍率で示す（年数に変換し�
 
   const a = judge(m(need * 2), ['office']).parts.cpu;
   check('倍率が実際の割り算と一致する', a.ratio === 2, `(${a.ratio})`);
-  check('倍率が文章にも出る', /2\.0倍/.test(a.headroom ?? ''), `(${a.headroom})`);
+  check('倍率が文章にも出る', /2\.0×/.test(a.headroom ?? ''), `(${a.headroom})`);
 
   const b = judge(m(need * 50), ['office']).parts.cpu;
-  check('極端な値は「10倍以上」とだけ言う', /10倍以上/.test(b.headroom ?? ''), `(${b.headroom})`);
+  check('極端な値は「10倍以上」とだけ言う', /more than 10×/.test(b.headroom ?? ''), `(${b.headroom})`);
 
   const c = judge(m(need - 1), ['office']).parts.cpu;
   check('足りていない時は余力を示さない', c.headroom === null);
@@ -192,7 +193,7 @@ console.log('\n[7] 余力は検算できる倍率で示す（年数に変換し�
   // 年数を名乗るフィールドが復活していないこと（同じ間違いを繰り返さないための番人）
   check('年数のフィールドは持たない', !('headroomYears' in a));
   check('先の年数を語る言葉が混ざらない',
-    !/年|将来|この先|もつ/.test(a.headroom ?? ''), `(${a.headroom})`);
+    !/year|years|future|will last/i.test(a.headroom ?? ''), `(${a.headroom})`);
   console.log(`       → "${a.headroom}"`);
 }
 
@@ -214,9 +215,9 @@ console.log('\n[7b] 5段階の札と、境目で崖にならないこと');
   const below = at(1.96), above = at(2.04);
   check('境目をまたぐと札は変わる', below.level !== above.level);
   check('その両側に「境目あたり」と添える',
-    /境目/.test(below.headroom) && /境目/.test(above.headroom));
+    /boundary/.test(below.headroom) && /boundary/.test(above.headroom));
   check('両側で倍率の表示は同じ（＝連続量だと分かる）',
-    below.headroom.match(/約[\d.]+倍/)[0] === above.headroom.match(/約[\d.]+倍/)[0]);
+    below.headroom.match(/about [\d.]+×/)[0] === above.headroom.match(/about [\d.]+×/)[0]);
   console.log(`       → 下: "${below.headroom}"`);
   console.log(`       → 上: "${above.headroom}"`);
 }
@@ -229,9 +230,9 @@ console.log('\n[7c] 読者が知っている機体と比べる');
       storage: { type: 'ssd', gb: 512 }, tpm: 'enabled', secureBoot: true },
     ['office'], { reference: ref });
   check('基準機との倍率が出る', r.parts.cpu.vsReference === 0.96, `(${r.parts.cpu.vsReference})`);
-  check('文章にも基準機が出る', /入門機と比べて/.test(r.parts.cpu.headroom));
+  check('文章にも基準機が出る', /entry-level machine/.test(r.parts.cpu.headroom));
   check('基準機の情報を結果に添える', r.reference?.cpuName === 'i3-12100');
-  check('年数を語らない断り書きがある', /年数|何年/.test(r.horizon ?? ''));
+  check('年数を語らない断り書きがある', /years/.test(r.horizon ?? ''));
   console.log(`       → "${r.parts.cpu.headroom}"`);
 }
 
@@ -253,9 +254,9 @@ console.log('\n[8] 「0円」と言えるのは本当に他の出費が無い時
   check('Windows11側は0円で解決すると分かる', r.win11.cost === 0 && r.win11.actions.length === 1);
   check('メモリは足りていないと判定される', r.parts.ram.status === STATUS.BLOCKER);
   check('見出しが「0円」だけを言い切らない',
-    !/^0円で解決する/.test(r.summary.headline), `(${r.summary.headline})`);
+    !/^Solved for ¥0/.test(r.summary.headline), `(${r.summary.headline})`);
   check('見出しに足りない部位が出る',
-    r.summary.headline.includes('メモリ'), `(${r.summary.headline})`);
+    r.summary.headline.includes('RAM'), `(${r.summary.headline})`);
   console.log(`       → "${r.summary.headline}"`);
 }
 
@@ -272,7 +273,7 @@ console.log('\n[9] 「読めていない」を「足りている」に化けさ�
   const r = judge({ ...base, ramGB: 'えへへ' }, ['video_4k']);
   check('数値化できないメモリ値はUNKNOWNになる', r.parts.ram.status === STATUS.UNKNOWN);
   check('UNKNOWNがあると「買うな」と言い切らない', r.summary.keepEverything === false);
-  check('見出しが読めていない事実を言う', /読めていない/.test(r.summary.headline), `(${r.summary.headline})`);
+  check('見出しが読めていない事実を言う', /could not be read/.test(r.summary.headline), `(${r.summary.headline})`);
   const r2 = judge({ ...base, ramGB: '8GB' }, ['office']);
   check('単位つき文字列 "8GB" は8として読む', r2.parts.ram.current === 8);
   console.log(`       → "${r.summary.headline}"`);
@@ -303,7 +304,7 @@ console.log('\n[11] Windows 11 の3値：リスト外をfalseに潰さない');
   check('eligibleはnull（falseではない）', w.eligible === null);
   check('「対応リストに入っていない」と断定しない', w.blockers.length === 0);
   check('公式の確認手段を案内する', w.actions.some(a => /PC Health Check/.test(a.label)));
-  check('確認できない旨を見出しで言う', /確認できない/.test(w.headline), `(${w.headline})`);
+  check('確認できない旨を見出しで言う', /cannot confirm/.test(w.headline), `(${w.headline})`);
   const wFalse = judgeWindows11({ cpu: { name: 'X', score: 1, win11: false }, tpm: 'enabled' },
     { consumer_esu: { coverage_end: '2027-10-12',
         enrollment_options: [{ option: 'Free - sync', cost_usd: 0 }] } });
@@ -326,7 +327,7 @@ console.log('\n[12] 値段の付かない不足を¥0の顔で隠さない');
   check('CPUが足りないと判定される', r.parts.cpu.status === STATUS.BLOCKER);
   check('出費の合計が「完全ではない」と分かる', r.summary.needSpendIsComplete === false);
   check('価格未取得の部位名が入る', r.summary.unpricedParts.includes('CPU'));
-  check('見出しにも価格未取得が出る', /価格未取得/.test(r.summary.headline), `(${r.summary.headline})`);
+  check('見出しにも価格未取得が出る', /no price on file/.test(r.summary.headline), `(${r.summary.headline})`);
   console.log(`       → "${r.summary.headline}"`);
 }
 
@@ -437,6 +438,91 @@ console.log('\n[15] Windowsが言う容量を実装容量として読み直す')
   }, ['photo']);
   check('読み直した後は増設を勧めない', fixed.parts.ram.status !== STATUS.BLOCKER, `(${fixed.parts.ram.status})`);
   check('見出しに買い物が出ない', fixed.summary.needSpend === 0 && fixed.summary.blockerCount === 0);
+}
+
+console.log('\n[16] TPMを読めていないのに「BIOS設定を変えるだけ」と断定しない');
+{
+  // スクショ経路で撮らせる2画面（バージョン情報・ドライブ一覧）にはTPMが映らない＝
+  // 写真の利用者は必ず tpm:'unknown' で来る。「無効」を観測した時だけ断定してよい。
+  const unread = judgeWindows11({ cpu: { win11: true }, tpm: 'unknown', secureBoot: null }, {});
+  check('TPM不明でも買い替えは要求しない', unread.eligible === true && unread.cost === 0);
+  check('TPM不明の印を持つ', unread.tpmUnread === true);
+  check('見出しが「読めていない」前提の言い方になる', /not read/i.test(unread.headline), `(${unread.headline})`);
+  const observed = judgeWindows11({ cpu: { win11: true }, tpm: 'disabled', secureBoot: false }, {});
+  check('TPM無効を実際に観測した時は従来どおり断定してよい', !observed.tpmUnread && /One BIOS setting/.test(observed.headline));
+
+  // 既に Windows 11 の機体に「BIOSを変えて11に上げろ」と言わない
+  const on11 = judgeWindows11({ cpu: { win11: true }, tpm: 'unknown', os: 'Windows 11 Home 23H2' }, {});
+  check('既にWindows 11ならBIOS案内を出さない', on11.alreadyOn11 === true && on11.actions.length === 0);
+  check('既にWindows 11なら見出しもそう言う', /already running/i.test(on11.headline));
+
+  // 全体見出しにも断定が漏れないこと
+  const r = judge({ cpu: { name: 'TEST-CPU-P', score: 20000, win11: true },
+    gpu: { name: 'TEST-GPU-P', score: 9000, integrated: false },
+    ramGB: 32, storage: { type: 'ssd', gb: 512 }, tpm: 'unknown' }, ['office'], { win11Data: {} });
+  check('全体見出しが「1つ変えるだけ」と断定しない',
+    !/One BIOS setting is all it takes/.test(r.summary.headline), `(${r.summary.headline})`);
+  check('それでも「買う物は無い」は言い切る', /nothing to buy/i.test(r.summary.headline), `(${r.summary.headline})`);
+}
+
+console.log('\n[17] 内蔵でも実測スコアが下限を割っていれば「足りている」と言わない');
+{
+  // integratedOk は「近年の内蔵GPUなら足りる」という編集判断。実測がある時は実測が勝つ。
+  const base = { cpu: { name: 'TEST-CPU-Q', score: 20000, win11: true },
+    ramGB: 16, storage: { type: 'ssd', gb: 512 }, tpm: 'enabled', secureBoot: true };
+  const weak = judge({ ...base, gpu: { name: 'OLD-IGPU', integrated: true, score: 341 } }, ['video_fhd']);
+  check('古い内蔵GPUの実測不足はBLOCKER', weak.parts.gpu.status === STATUS.BLOCKER, `(${weak.parts.gpu.status})`);
+  check('本文が実測と必要ラインを並べる', /341/.test(weak.parts.gpu.verdict ?? ''), `(${weak.parts.gpu.verdict})`);
+  const fine = judge({ ...base, gpu: { name: 'NEW-IGPU', integrated: true, score: 2600 } }, ['video_fhd']);
+  check('実測が足りる内蔵はKEEPのまま', fine.parts.gpu.status === STATUS.KEEP, `(${fine.parts.gpu.status})`);
+  const generic = judge({ ...base, gpu: { name: '内蔵グラフィック', integrated: true, score: null } }, ['video_fhd']);
+  check('型番不明の内蔵は従来どおり編集判断でKEEP', generic.parts.gpu.status === STATUS.KEEP);
+  // GPU不要用途で、読めてもいない名前を「integrated」と名乗らせない
+  const noGpu = judge({ ...base, gpu: null }, ['office']);
+  check('GPU不要用途で観測していない名前を作らない', noGpu.parts.gpu.name == null);
+}
+
+console.log('\n[18] 合流の続き：桁区切り・MB表記・別ドライブの証拠');
+{
+  // "16,384 MB"（システム情報・BIOS画面の表記）を 384GB と読まない
+  const mb = mergeScans([{ ramGB: '16,384 MB' }]);
+  check('カンマ区切りのMB表記は16GBとして読む', mb.ramGB === 16, `(${mb.ramGB})`);
+  const gbComma = mergeScans([{ storage: { type: 'ssd', gb: '1,024 GB' } }]);
+  check('カンマ区切りのGB表記も正しく読む', gbComma.storage.gb === 1024, `(${gbComma.storage.gb})`);
+
+  // 14GBと16GBは「丸めの差」ではない。比率でなく実在する予約量（1GB）で判定する
+  const gap = mergeScans([{ ramGB: 14 }, { ramGB: 16 }]);
+  check('14と16は同じ値扱いにしない（メモリを製造しない）', gap.ramGB === null);
+  check('その食い違いは画面まで運ぶ', gap.conflicts.some(c => /memory/i.test(c)));
+
+  // サイズが食い違う＝別ドライブを見ている証拠。片側だけの種類申告を信じない
+  const wrongDrive = mergeScans([{ storage: { type: null, gb: 512 } }, { storage: { type: 'hdd', gb: 1000 } }]);
+  check('サイズ食い違い時は種類も採らない', wrongDrive.storage.type === null, `(${wrongDrive.storage.type})`);
+  check('別ドライブの可能性を言葉で伝える', wrongDrive.conflicts.some(c => /different drives/i.test(c)));
+
+  // OSの食い違いも1枚目勝ちにしない
+  const osClash = mergeScans([{ os: 'Windows 10 Home 22H2' }, { os: 'Windows 11 Home 23H2' }]);
+  check('OSが食い違ったらnull', osClash.os === null);
+  check('OSの食い違いも記録する', osClash.conflicts.some(c => /edition/i.test(c)));
+
+  // モデルが封筒（{name}）でなく裸の文字列で返しても捨てない
+  const bare = mergeScans([{ cpu: 'Intel Core i5-1235U' }]);
+  check('裸の文字列のCPUも候補に残る', bare.cpuCandidates.length === 1, `(${bare.cpuCandidates.join(',')})`);
+}
+
+console.log('\n[19] 型番はブランド語を省いた書き方でも1行に落ちる');
+{
+  // 「GTX 1070 Ti」と打つ人に「GeForce GTX 1070 Ti なら知っている」と返さない。
+  // ただしブランド語以外（Ti/Superなど）が違うものは別製品＝従来どおり保留。
+  const R = buildResolvers({ cpus: [], gpus: [
+    { name: 'GTX 9990 Ti', fullName: 'NVIDIA GeForce GTX 9990 Ti', score: 10000 },
+    { name: 'GTX 9990',    fullName: 'NVIDIA GeForce GTX 9990',    score: 8000 },
+    { name: 'RX 9990',     fullName: 'AMD Radeon RX 9990',         score: 4000 },
+  ] });
+  check('ブランド省略（9990 Ti）でも1行に確定する', R.gpu('9990 Ti').picked?.name === 'GTX 9990 Ti');
+  check('素の型番をTi付きの行に吸わせない', R.gpu('GTX 9990').picked?.name === 'GTX 9990');
+  check('複数行にまたがる省略形は保留する', R.gpu('9990').picked === null,
+    `(${R.gpu('9990').picked?.name})`);
 }
 
 console.log(`\n=== ${pass} passed, ${fail} failed ===\n`);

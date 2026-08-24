@@ -80,7 +80,7 @@ const WORKLOAD_PROMPT = (text) => `A person describes what they do with their co
 "${text}"
 
 Map it onto these workload profiles:
-${WORKLOAD_LIST.map(w => `- ${w.id}: ${w.labelEn}`).join('\n')}
+${WORKLOAD_LIST.map(w => `- ${w.id}: ${w.label}`).join('\n')}
 
 Rule that matters: when the description is ambiguous, choose the LIGHTER profile.
 Underestimating costs this person nothing. Overestimating sells them hardware they
@@ -113,7 +113,7 @@ function normalizeImages(input) {
  */
 async function scanNode(ctx, { input, llm }) {
   const images = normalizeImages(input);
-  if (!images.length) return { skipped: true, reason: '画像なし。手入力の値を使う。', imageCount: 0 };
+  if (!images.length) return { skipped: true, reason: 'No image was sent — using the typed-in values.', imageCount: 0 };
 
   const results = await Promise.all(images.map(async (im, i) => {
     try {
@@ -131,8 +131,8 @@ async function scanNode(ctx, { input, llm }) {
 async function workloadNode(ctx, { input, llm }) {
   const { useText, workloads } = input ?? {};
   // 画面で明示的に選ばれているならモデルに聞く必要がない
-  if (workloads?.length) return { workloads, reasoning: '画面で選択済み' };
-  if (!useText) return { workloads: ['office'], reasoning: '入力が無いので最も軽い用途を仮置き' };
+  if (workloads?.length) return { workloads, reasoning: 'picked on the page' };
+  if (!useText) return { workloads: ['office'], reasoning: 'no input — assuming the lightest workload' };
   return llm.json(`workload\n${WORKLOAD_PROMPT(useText)}`);
 }
 
@@ -174,12 +174,35 @@ async function resolveNode(ctx, { parts, scan, input }) {
     const picked = tried.filter(t => t.r.picked);
     const distinct = [...new Map(picked.map(t => [t.r.picked.name, t])).values()];
 
-    if (distinct.length === 1) return { part: distinct[0].r.picked, note: null };
+    if (distinct.length === 1) {
+      // One string resolved, another did not. Usually the unresolved one is a worse
+      // reading of the same part — but it might be a different part the table lacks,
+      // so the fact is carried to the screen instead of being silently discarded.
+      const leftover = tried.filter(t => !t.r.picked).map(t => t.name);
+      const note = leftover.length
+        ? `${KIND}: also read "${leftover[0]}", which is not in the benchmark table. Judged on ${distinct[0].r.picked.name}.`
+        : null;
+      return { part: distinct[0].r.picked, note };
+    }
     if (distinct.length > 1) {
+      // Two rows for a CPU is a contradiction — one machine has one CPU.
+      // Two rows for a GPU is Tuesday: laptops (and desktops with both) genuinely
+      // carry an integrated AND a discrete GPU, and Task Manager lists both. When
+      // exactly one of the rows is discrete, both readings are true and the workloads
+      // this tool prices are decided by the discrete card.
+      if (kind === 'gpu') {
+        const discrete = distinct.filter(t => t.r.picked.integrated !== true);
+        if (discrete.length === 1 && discrete.length < distinct.length) {
+          return {
+            part: discrete[0].r.picked,
+            note: 'GPU: both integrated and discrete graphics were read — normal for a machine that has both. Judged on the discrete card, the one these workloads run on.',
+          };
+        }
+      }
       const rows = distinct.map(t => t.r.picked.name).join(' / ');
       return {
         part: { name: names[0], score: null, unresolved: true, candidates: distinct.map(t => t.r.picked.name) },
-        note: `${KIND}: スクショごとに違うものが読めた（${rows}）。どれがこの機体かはここからは決められない`,
+        note: `${KIND}: the screenshots read differently (${rows}). Which one this machine has cannot be decided from here`,
       };
     }
 
@@ -187,8 +210,8 @@ async function resolveNode(ctx, { parts, scan, input }) {
     const first = tried[0];
     const cands = (first.r.candidates ?? []).map(c => c.name).slice(0, 4);
     const note = cands.length
-      ? `${KIND}「${first.name}」は1つに決められない（候補: ${cands.join(' / ')}）`
-      : `${KIND}「${first.name}」はベンチデータに無い`;
+      ? `${KIND} "${first.name}" does not pin down one part (candidates: ${cands.join(' / ')})`
+      : `${KIND} "${first.name}" is not in the benchmark table`;
     return { part: { name: first.name, score: null, unresolved: true, candidates: cands }, note };
   };
 
@@ -200,7 +223,7 @@ async function resolveNode(ctx, { parts, scan, input }) {
   const GENERIC_IGPU = /^(内蔵|オンボード|integrated|igpu|onboard|cpu内蔵|なし|none)$/i;
   const specificGpu = gpuNames.filter(n => !GENERIC_IGPU.test(String(n).trim()));
   const gpuR = (gpuNames.length && !specificGpu.length)
-    ? { part: { name: '内蔵グラフィック', integrated: true, score: null, generic: true }, note: null }
+    ? { part: { name: 'Integrated graphics', integrated: true, score: null, generic: true }, note: null }
     : resolvePart('gpu', specificGpu);
 
   // メモリはモデルや手入力から文字列で来ることがある（"8GB"）。単位を読んで数値にし、
@@ -247,8 +270,8 @@ async function resolveNode(ctx, { parts, scan, input }) {
   machine.unresolved = [
     ...(cpuR.note ? [cpuR.note] : []),
     ...(gpuR.note ? [gpuR.note] : []),
-    ...(ramGB == null ? ['メモリ容量が読めていない'] : []),
-    ...(storage.type == null ? ['ストレージの種類（HDD/SSD）が読めていない'] : []),
+    ...(ramGB == null ? ['Installed memory could not be read'] : []),
+    ...(storage.type == null ? ['Storage type (HDD or SSD) could not be read'] : []),
     // 複数のスクショが食い違った事実は、片方を黙って採らずにそのまま見せる。
     ...(Array.isArray(scan.conflicts) ? scan.conflicts : []),
     // モデルが「読めなかった」と申告したものは、そのまま人間に見せる。捨てると
@@ -284,7 +307,7 @@ async function verdictNode(ctx, { machine, workloads, win11Data, prices, market,
 
 /** 判定を言葉にする（モデル・数字は作らせない） */
 async function narrateNode(ctx, { verdict: v, llm, input }) {
-  const lang = input?.lang ?? 'ja';
+  const lang = input?.lang ?? 'en';
 
   const prompt = `Put this verdict into plain ${lang === 'ja' ? 'Japanese' : 'English'} for its owner.
 
@@ -342,7 +365,7 @@ export function buildFleet(deps = {}) {
         narration = await run(narrate, { ...base, verdict: verdictResult });
       } catch (e) {
         narration = null;
-        verdictResult.narrationError = `語りの生成に失敗（判定への影響なし）: ${e.message}`;
+        verdictResult.narrationError = `Narration failed (the verdict itself is unaffected): ${e.message}`;
       }
 
       return { scan: scanned, machine, workloads, verdict: verdictResult, narration };
