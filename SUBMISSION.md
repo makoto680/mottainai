@@ -10,12 +10,32 @@
 | Gemini 3.5 以降 | `gemini-3.7-flash`（`agents/config.js` で明示指定） | ✅ |
 | Googleエージェントフレームワーク | Google ADK TypeScript `@google/adk` v2.0（Workflow） | ✅ |
 | Google Cloudインフラ | Cloud Run（asia-northeast1） | ✅ |
-| ホスト済みURL | Cloud Run のURL | 🔄 デプロイ中 |
+| ホスト済みURL | **https://mottainai-720945218465.asia-northeast1.run.app** | ✅ |
 | コードリポジトリ | git（ローカル）→ GitHub公開が必要 | ⏸ |
 | 構成図 | `ARCHITECTURE.md` | ✅ |
 | README（起動手順込み） | `README.md` | ✅ |
 | デモ動画 4分以内・英語または英語字幕 | 下の台本 | ⏸ |
 | 期間中に新規作成 | 2026-08-24 着手・全て新規 | ✅ |
+
+## 本番環境
+
+- **公開URL**: https://mottainai-720945218465.asia-northeast1.run.app
+- プロジェクト: `lucid-charmer-431015-i6` / リージョン: `asia-northeast1`（東京）
+- サービス名: `mottainai` / メモリ512Mi・CPU1・最大3インスタンス
+- APIキーは環境変数として渡してあり、イメージにもGitにも入っていない（`.dockerignore`で`.env`を除外）
+
+再デプロイ:
+```powershell
+$env:PATH += ";L:\gcloud\google-cloud-sdk\bin"
+cd L:\10\claude_demo\mottainai
+gcloud run deploy mottainai --source . --region asia-northeast1 --allow-unauthenticated --quiet
+```
+※環境変数は保持されるので、キーの再指定は不要。
+
+動画で「Google Cloudで動いている」ことを示す用:
+```powershell
+gcloud run services describe mottainai --region asia-northeast1
+```
 
 ## 動画の台本（目標 3分30秒・顔出しなし・画面録画のみ）
 
