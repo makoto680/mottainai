@@ -1,0 +1,19 @@
+{
+  "name": "mottainai",
+  "version": "0.1.0",
+  "description": "The agent that tries to talk you out of buying a new PC",
+  "type": "module",
+  "scripts": {
+    "test": "node core/selftest.js",
+    "start": "node server/index.js",
+    "build:data": "node data/build_parts.js"
+  },
+  "dependencies": {
+    "@google/adk": "^2.0.0",
+    "@google/genai": "^2.18.0",
+    "express": "^5.2.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

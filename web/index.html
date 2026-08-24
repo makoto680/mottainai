@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOTTAINAI — 買わなくていい理由を探すエージェント</title>
+<style>
+  :root{
+    --paper:#fbf8f3;
+    --paper2:#ffffff;
+    --ink:#2b2a26;
+    --ink-soft:#6b6760;
+    --line:#e2dcd1;
+    --keep:#2e7d4f;
+    --keep-bg:#eaf5ee;
+    --fix:#b8721a;
+    --fix-bg:#fdf3e3;
+    --stop:#b23c3c;
+    --stop-bg:#fbeceb;
+    --accent:#1d6f8b;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:"Hiragino Sans","Yu Gothic UI","Segoe UI",system-ui,sans-serif;
+    background:var(--paper); color:var(--ink); line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:34px 22px 90px}
+
+  header{margin-bottom:30px}
+  .brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  h1{font-size:31px;letter-spacing:.14em;font-weight:600}
+  .brand .jp{font-size:14px;color:var(--ink-soft);letter-spacing:.08em}
+  .tagline{margin-top:12px;font-size:16px;color:var(--ink-soft);max-width:640px}
+  .tagline b{color:var(--ink);font-weight:600}
+
+  .card{background:var(--paper2);border:1px solid var(--line);border-radius:14px;padding:24px 26px;margin-bottom:18px}
+  .card h2{font-size:15px;letter-spacing:.06em;color:var(--ink-soft);font-weight:600;margin-bottom:16px}
+
+  /* ---- 入力 ---- */
+  .drop{
+    border:2px dashed var(--line); border-radius:12px; padding:30px 20px; text-align:center;
+    cursor:pointer; transition:.18s; background:#fdfbf7;
+  }
+  .drop:hover,.drop.over{border-color:var(--accent);background:#f2f8fa}
+  .drop .big{font-size:15px;font-weight:600;margin-bottom:6px}
+  .drop .small{font-size:12.5px;color:var(--ink-soft)}
+  .drop img{max-width:100%;max-height:230px;border-radius:8px;margin-top:12px}
+
+  .or{display:flex;align-items:center;gap:14px;margin:20px 0 16px;color:var(--ink-soft);font-size:12.5px}
+  .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:13px}
+  label.f{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:5px}
+  input[type=text],input[type=number],select{
+    width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;
+    font-size:14px;font-family:inherit;background:#fff;color:var(--ink);
+  }
+  input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+  .chip{
+    padding:8px 15px;border:1px solid var(--line);border-radius:20px;font-size:13.5px;
+    cursor:pointer;background:#fff;transition:.15s;user-select:none;
+  }
+  .chip:hover{border-color:var(--accent)}
+  .chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  button.go{
+    margin-top:22px;width:100%;padding:15px;border:none;border-radius:11px;
+    background:var(--ink);color:#fff;font-size:16px;font-weight:600;cursor:pointer;
+    font-family:inherit;letter-spacing:.04em;transition:.15s;
+  }
+  button.go:hover{background:#000}
+  button.go:disabled{background:#bbb;cursor:default}
+
+  /* ---- フリート ---- */
+  .fleet{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .ag{border:1px solid var(--line);border-radius:10px;padding:13px 15px;background:#fdfbf7;transition:.25s}
+  .ag .n{font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px}
+  .ag .d{font-size:11.5px;color:var(--ink-soft);margin-top:3px}
+  .ag .dot{width:8px;height:8px;border-radius:50%;background:#d2ccc2;flex:none}
+  .ag.run{border-color:var(--accent);background:#f2f8fa}
+  .ag.run .dot{background:var(--accent);animation:pulse 1s infinite}
+  .ag.done{border-color:var(--keep);background:var(--keep-bg)}
+  .ag.done .dot{background:var(--keep)}
+  .ag.code{border-style:dashed}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+  .fleet-note{font-size:11.5px;color:var(--ink-soft);margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+
+  /* ---- 結果 ---- */
+  .headline{font-size:25px;font-weight:600;line-height:1.5;margin-bottom:6px}
+  .headline.keep{color:var(--keep)}
+  .headline.fix{color:var(--fix)}
+  .money{display:flex;gap:26px;flex-wrap:wrap;margin:20px 0 4px;padding:18px 20px;background:var(--keep-bg);border-radius:11px}
+  .money.fix{background:var(--fix-bg)}
+  .m-item .k{font-size:11.5px;color:var(--ink-soft)}
+  .m-item .v{font-size:26px;font-weight:600;letter-spacing:.01em}
+  .m-item .v.big{color:var(--keep)}
+
+  table{width:100%;border-collapse:collapse;margin-top:6px;font-size:13.5px}
+  th{text-align:left;font-size:11.5px;color:var(--ink-soft);font-weight:600;padding:7px 9px;border-bottom:1px solid var(--line)}
+  td{padding:10px 9px;border-bottom:1px solid #f0ebe2;vertical-align:top}
+  .badge{display:inline-block;padding:2px 9px;border-radius:11px;font-size:11.5px;font-weight:600;white-space:nowrap}
+  .b-KEEP{background:var(--keep-bg);color:var(--keep)}
+  .b-TIGHT{background:#f3f0e8;color:var(--ink-soft)}
+  .b-OVERKILL{background:#eef3f7;color:var(--accent)}
+  .b-BLOCKER{background:var(--stop-bg);color:var(--stop)}
+
+  .narr{background:#fdfbf7;border-left:3px solid var(--accent);padding:16px 20px;border-radius:0 9px 9px 0;margin-top:8px;font-size:14.5px;white-space:pre-wrap}
+  .alt{border:1px solid var(--line);border-radius:10px;padding:13px 16px;margin-top:9px}
+  .alt .t{font-weight:600;font-size:14px}
+  .alt .c{font-size:12.5px;color:var(--keep);font-weight:600}
+  .alt .d{font-size:12.5px;color:var(--ink-soft);margin-top:3px}
+
+  .foot{font-size:11.5px;color:var(--ink-soft);margin-top:26px;padding-top:16px;border-top:1px solid var(--line)}
+  .foot code{background:#f2ede4;padding:1px 5px;border-radius:4px}
+  .hide{display:none}
+  .warn{background:var(--fix-bg);border:1px solid #e6cfa0;border-radius:9px;padding:11px 15px;font-size:12.5px;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">
+    <h1>MOTTAINAI</h1>
+    <span class="jp">もったいない</span>
+  </div>
+  <p class="tagline">
+    世の中のPC診断は、全部「もっと良いものを買え」と言う。<br>
+    これは逆を調べるエージェント。<b>買わなくていい理由</b>を先に探して、
+    どうしても足りない1点だけを教える。
+  </p>
+</header>
+
+<!-- 入力 -->
+<div class="card" id="inputCard">
+  <h2>1 — 今のPCを見せる</h2>
+
+  <div class="drop" id="drop">
+    <div class="big">写真をドロップ / クリックして選ぶ</div>
+    <div class="small">PCの中身・デバイスマネージャーの画面・仕様シール、どれでもいい</div>
+    <img id="preview" class="hide" alt="">
+    <input type="file" id="file" accept="image/*" class="hide">
+  </div>
+
+  <div class="or">写真がなければ、分かる範囲で入力</div>
+
+  <div class="grid">
+    <div>
+      <label class="f">CPU（型番）</label>
+      <input type="text" id="cpu" list="cpuList" placeholder="例: i5-7500">
+      <datalist id="cpuList"></datalist>
+    </div>
+    <div>
+      <label class="f">グラフィック</label>
+      <input type="text" id="gpu" list="gpuList" placeholder="内蔵 / 例: GTX 1060">
+      <datalist id="gpuList"></datalist>
+    </div>
+    <div>
+      <label class="f">メモリ</label>
+      <select id="ram">
+        <option value="">わからない</option>
+        <option value="4">4GB</option><option value="8">8GB</option>
+        <option value="16">16GB</option><option value="32">32GB</option><option value="64">64GB</option>
+      </select>
+    </div>
+    <div>
+      <label class="f">ストレージ</label>
+      <select id="stype">
+        <option value="">わからない</option>
+        <option value="hdd">HDD（カリカリ音がする）</option>
+        <option value="ssd">SSD</option>
+        <option value="nvme">NVMe SSD</option>
+      </select>
+    </div>
+  </div>
+
+  <h2 style="margin-top:26px">2 — 何に使っているか</h2>
+  <div class="chips" id="chips"></div>
+
+  <button class="go" id="go">これで調べる</button>
+</div>
+
+<!-- フリート -->
+<div class="card hide" id="fleetCard">
+  <h2>エージェントが動いている</h2>
+  <div class="fleet" id="fleet"></div>
+  <div class="fleet-note">
+    金額に関わる判断は <b>verdict</b> だけが行い、そこにモデルは入らない。
+    モデルは「見る」と「言葉にする」だけを担当する。
+  </div>
+</div>
+
+<!-- 結果 -->
+<div id="result"></div>
+
+<div class="foot" id="foot"></div>
+
+</div>
+
+<script>
+const WORKLOAD_FALLBACK = [{id:'office',label:'Web・動画視聴・Office（事務）'}];
+let workloads = [], picked = new Set(['office']), imageData = null, imageMime = null;
+
+const $ = s => document.querySelector(s);
+
+// ---- 用途チップ ----
+async function loadWorkloads(){
+  try{
+    workloads = await (await fetch('/api/workloads')).json();
+  }catch(e){ workloads = WORKLOAD_FALLBACK; }
+  const box = $('#chips');
+  box.innerHTML = '';
+  for(const w of workloads){
+    const el = document.createElement('div');
+    el.className = 'chip' + (picked.has(w.id) ? ' on' : '');
+    el.textContent = w.label;
+    el.title = w.note || '';
+    el.onclick = () => {
+      if(picked.has(w.id)) picked.delete(w.id); else picked.add(w.id);
+      if(picked.size === 0) picked.add(w.id);
+      loadWorkloads();
+    };
+    box.appendChild(el);
+  }
+}
+
+// ---- 画像 ----
+const drop = $('#drop'), file = $('#file');
+drop.onclick = () => file.click();
+drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+drop.ondragleave = () => drop.classList.remove('over');
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); if(e.dataTransfer.files[0]) readImage(e.dataTransfer.files[0]); };
+file.onchange = () => { if(file.files[0]) readImage(file.files[0]); };
+
+function readImage(f){
+  const r = new FileReader();
+  r.onload = () => {
+    imageData = r.result; imageMime = f.type;
+    const img = $('#preview'); img.src = r.result; img.classList.remove('hide');
+    drop.querySelector('.big').textContent = '読み取り対象にする画像';
+    drop.querySelector('.small').textContent = f.name;
+  };
+  r.readAsDataURL(f);
+}
+
+// ---- 型番の候補 ----
+async function suggest(kind, q, listId){
+  if(q.length < 2) return;
+  try{
+    const r = await (await fetch(`/api/parts?kind=${kind}&q=${encodeURIComponent(q)}`)).json();
+    const dl = document.getElementById(listId);
+    dl.innerHTML = r.map(p => `<option value="${p.name}">${p.fullName}${p.win11===false?'（Win11非対応）':''}</option>`).join('');
+  }catch(e){}
+}
+$('#cpu').oninput = e => suggest('cpu', e.target.value, 'cpuList');
+$('#gpu').oninput = e => suggest('gpu', e.target.value, 'gpuList');
+
+// ---- フリート表示 ----
+const AGENTS = [
+  {id:'scan',     n:'scan',     d:'画像から部品を読む',     model:true},
+  {id:'workload', n:'workload', d:'用途を読み取る',         model:true},
+  {id:'resolve',  n:'resolve',  d:'型番を照合する',         model:false},
+  {id:'verdict',  n:'verdict',  d:'判定する（モデル不使用）', model:false},
+  {id:'narrate',  n:'narrate',  d:'言葉にする',             model:true},
+];
+function renderFleet(state){
+  $('#fleet').innerHTML = AGENTS.map(a => `
+    <div class="ag ${state[a.id]||''} ${a.model?'':'code'}">
+      <div class="n"><span class="dot"></span>${a.n}</div>
+      <div class="d">${a.d}</div>
+    </div>`).join('');
+}
+
+// ---- 実行 ----
+$('#go').onclick = async () => {
+  const btn = $('#go'); btn.disabled = true; btn.textContent = '調べている…';
+  $('#fleetCard').classList.remove('hide');
+  $('#result').innerHTML = '';
+
+  // 実際の完了は1回の応答でまとめて返るため、走っている間は run 表示に留める
+  renderFleet({scan:'run', workload:'run', resolve:'run', verdict:'run', narrate:'run'});
+
+  const manual = {};
+  if($('#cpu').value.trim()) manual.cpu = $('#cpu').value.trim();
+  if($('#gpu').value.trim()) manual.gpu = $('#gpu').value.trim();
+  if($('#ram').value) manual.ramGB = Number($('#ram').value);
+  if($('#stype').value) manual.storage = { type: $('#stype').value, gb: null };
+
+  try{
+    const res = await fetch('/api/judge', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        image: imageData, mimeType: imageMime,
+        workloads: [...picked], manual, lang:'ja',
+      }),
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    const done = {}; AGENTS.forEach(a => done[a.id]='done'); renderFleet(done);
+    render(data);
+  }catch(e){
+    $('#result').innerHTML = `<div class="card"><div class="warn">失敗した: ${e.message}</div></div>`;
+    renderFleet({});
+  }
+  btn.disabled = false; btn.textContent = 'もう一度調べる';
+};
+
+// ---- 結果描画 ----
+const yen = n => '¥' + Number(n).toLocaleString();
+
+function render(d){
+  const v = d.verdict; if(!v) return;
+  const s = v.summary;
+  const keep = s.keepEverything;
+
+  let h = `<div class="card">
+    <h2>結果</h2>
+    <div class="headline ${keep?'keep':'fix'}">${s.headline}</div>`;
+
+  h += `<div class="money ${keep?'':'fix'}">
+      <div class="m-item"><div class="k">実際に必要な出費</div><div class="v">${yen(s.needSpend)}</div></div>`;
+  if(s.marketSpend != null){
+    h += `<div class="m-item"><div class="k">よくある診断の薦め</div><div class="v" style="text-decoration:line-through;color:var(--ink-soft)">${yen(s.marketSpend)}</div></div>
+          <div class="m-item"><div class="k">使わずに済む</div><div class="v big">${yen(s.saved)}</div></div>`;
+  }
+  h += `</div>`;
+
+  if(d.narration) h += `<div class="narr">${escapeHtml(d.narration)}</div>`;
+  h += `</div>`;
+
+  // 部位ごと
+  h += `<div class="card"><h2>部位ごとの判定</h2><table>
+    <tr><th>部位</th><th>今</th><th>判定</th><th></th></tr>`;
+  const LBL = {KEEP:'替えなくていい', TIGHT:'余裕は薄い', OVERKILL:'余りすぎ', BLOCKER:'ここだけ足りない'};
+  for(const [k,p] of Object.entries(v.parts)){
+    let note = p.verdict ?? (p.headroomYears ? `この用途ならあと約${p.headroomYears}年は足りる目安` : '');
+    if(p.fixWith){
+      note += `<br><b style="color:var(--fix)">${escapeHtml(p.fixWith.label ?? '')} ${p.fixWith.yen?yen(p.fixWith.yen):''}</b>`;
+      if(p.fixNote) note += `<br>${escapeHtml(p.fixNote)}`;
+      if(p.fixWith.basis === 'low') note += `<br><span style="color:var(--ink-soft)">※この額は最安値。代表値は未取得。</span>`;
+    }
+    if(p.warning) note += `<br><b style="color:var(--stop)">${escapeHtml(p.warning)}</b>`;
+    h += `<tr>
+      <td><b>${p.key}</b>${p.name?`<br><span style="font-size:11.5px;color:var(--ink-soft)">${escapeHtml(p.name)}</span>`:''}</td>
+      <td>${escapeHtml(String(p.currentLabel ?? p.current ?? '-'))}</td>
+      <td><span class="badge b-${p.status}">${LBL[p.status]||p.status}</span></td>
+      <td style="font-size:12.5px;color:var(--ink-soft)">${note}</td>
+    </tr>`;
+  }
+  h += `</table></div>`;
+
+  // Windows 11
+  if(v.win11){
+    h += `<div class="card"><h2>Windows 11</h2>
+      <div style="font-size:16px;font-weight:600;margin-bottom:8px">${escapeHtml(v.win11.headline)}</div>`;
+    for(const a of (v.win11.actions ?? []))
+      h += `<div class="alt"><div class="t">${escapeHtml(a.label)} <span class="c">${a.cost===0?'0円':''}</span></div><div class="d">${escapeHtml(a.detail)}</div></div>`;
+    for(const a of (v.win11.alternatives ?? []))
+      h += `<div class="alt"><div class="t">${escapeHtml(a.label)} ${a.cost===0?'<span class="c">0円</span>':''}</div><div class="d">${escapeHtml(a.detail)}</div></div>`;
+    h += `</div>`;
+  }
+
+  if(d.machine?.unresolved?.length){
+    h += `<div class="card"><div class="warn"><b>読み取れなかったもの</b><br>${d.machine.unresolved.map(escapeHtml).join('<br>')}<br>
+      <span style="color:var(--ink-soft)">分からないものは推測せず、そのまま「不明」として扱っている。</span></div></div>`;
+  }
+
+  $('#result').innerHTML = h;
+  $('#result').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function escapeHtml(s){
+  return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ---- 起動 ----
+loadWorkloads();
+fetch('/api/health').then(r=>r.json()).then(h=>{
+  $('#foot').innerHTML = `判定エンジン <code>core/verdict.js</code>（モデル不使用・自己検証22項目）｜
+    ベンチデータ CPU ${h.data.cpus}件 / GPU ${h.data.gpus}件（PassMark・出典つき）｜
+    モデル <code>${h.model}</code>${h.llm==='mock'?'（未接続のため説明文は仮）':''}<br>
+    用途ごとの必要ラインは自作PCの実地経験による編集判断であり、公式の数値そのままではない。`;
+}).catch(()=>{});
+</script>
+</body>
+</html>

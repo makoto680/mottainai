@@ -1,0 +1,4454 @@
+{
+ "meta": {
+  "builtFrom": "research_raw.json",
+  "builtAt": "2026-08-24 08:38",
+  "cpuCount": 125,
+  "gpuCount": 87,
+  "note": "数値は調査の生データをそのまま移送したもの。このスクリプトは値を作らない。"
+ },
+ "win11": {
+  "minimum_requirements": {
+   "processor": {
+    "value": "1 GHz or faster, 2 or more cores, on a compatible 64-bit processor or SoC",
+    "verbatim": "1 gigahertz (GHz) or faster with 2 or more cores on a compatible 64-bit processor or System on a Chip (SoC).",
+    "source": "https://www.microsoft.com/en-us/windows/windows-11-specifications"
+   },
+   "ram_gb": {
+    "value": 4,
+    "verbatim": "4 gigabytes (GB)",
+    "source": "https://www.microsoft.com/en-us/windows/windows-11-specifications"
+   },
+   "storage_gb": {
+    "value": 64,
+    "verbatim": "64 GB or larger storage device",
+    "source": "https://www.microsoft.com/en-us/windows/windows-11-specifications"
+   },
+   "firmware": {
+    "value": "UEFI, Secure Boot capable",
+    "verbatim": "UEFI, Secure Boot capable",
+    "source": "https://www.microsoft.com/en-us/windows/windows-11-specifications"
+   },
+   "tpm": {
+    "value": "TPM 2.0",
+    "verbatim": "Trusted Platform Module (TPM) version 2.0",
+    "source": "https://www.microsoft.com/en-us/windows/windows-11-specifications"
+   },
+   "graphics": {
+    "value": "DirectX 12 or later with WDDM 2.0 driver",
+    "verbatim": "Compatible with DirectX 12 or later with WDDM 2.0 driver",
+    "source": "https://www.microsoft.com/en-us/windows/windows-11-specifications"
+   },
+   "display": {
+    "value": "720p, >9 inch diagonal, 8 bits per color channel",
+    "verbatim": "High definition (720p) display that is greater than 9\" diagonally, 8 bits per color channel",
+    "source": "https://www.microsoft.com/en-us/windows/windows-11-specifications"
+   },
+   "note": "Microsoft short-link for the CPU list given on the spec page: http://aka.ms/CPUlist"
+  },
+  "copilot_plus_pc": {
+   "npu_tops": 40,
+   "ram_gb": 16,
+   "ram_type": "DDR5/LPDDR5",
+   "storage_gb": 256,
+   "storage_type": "SSD/UFS",
+   "cpu_families": [
+    "AMD Ryzen AI 300 and 400 series",
+    "Intel Core Ultra 200V and 300V series",
+    "Snapdragon X series"
+   ],
+   "source": "https://www.microsoft.com/en-us/windows/windows-11-specifications"
+  },
+  "cpu_support_boundary": {
+   "intel": {
+    "oldest_core_generation_supported": 8,
+    "rule": "Intel Core 8th generation (Coffee Lake / Kaby Lake-R) and newer are on the official list. 7th generation and older Core i3/i5/i7 are NOT listed.",
+    "families_on_list_observed": [
+     "Core i3/i5/i7/i9 8th-14th Gen",
+     "Core m 8th Gen",
+     "Core Ultra Series 1/2/3",
+     "Core Series 1/Series 2",
+     "Core N300/N100/N200/N90",
+     "Atom x7000",
+     "Celeron 3000/4000/5000/6000/7000/G4000/G5000/G6000/J4000/N4000/N5000",
+     "Pentium Gold/Silver various",
+     "Intel 300 desktop",
+     "U300",
+     "Xeon W / Xeon E / Xeon D / Xeon Scalable 1st-5th Gen / Xeon 6"
+    ],
+    "caveat": "Some non-Core families on the list (e.g. Celeron 3000 series) predate 8th-gen Core, so \"8th gen or newer\" is a rule of thumb for Core-branded chips only, not a universal cutoff.",
+    "list_version": "Windows 11 version 24H2",
+    "page_ms_date": "2025-02-27",
+    "source": "https://learn.microsoft.com/en-us/windows-hardware/design/minimum/supported/windows-11-24h2-supported-intel-processors"
+   },
+   "amd": {
+    "oldest_ryzen_generation_supported": "Ryzen 2000 series (Zen+, Pinnacle Ridge)",
+    "rule": "AMD Ryzen 2000-series desktop CPUs (2300X / 2500X / 2600 / 2600X / 2700 / 2700X) and newer are on the official list. Ryzen 1000 series (1200/1400/1600/1700/1800X) is NOT on the list.",
+    "important_exception": "Ryzen 3 2200G and Ryzen 5 2400G (Raven Ridge APUs) are NOT present on the Microsoft list even though their model numbers start with 2. They are Zen (1st gen) silicon. This is a common trap: a \"Ryzen 2000\" number does not automatically mean supported.",
+    "exception_evidence": "The fetched 24H2 AMD list contains Ryzen 3 2300X, Ryzen 5 2500X, Ryzen 5 2600/2600E/2600X, Ryzen 5 PRO 2600, Ryzen 7 2700/2700E/2700X, Ryzen 7 PRO 2700/2700X. It does not contain 2200G or 2400G.",
+    "families_on_list_observed": [
+     "AMD 3015e/3020e",
+     "Athlon 300/3000/7000 series & Athlon Gold/Silver/PRO",
+     "Ryzen 3/5/7/9 (2000 series and newer) incl. PRO",
+     "Ryzen Embedded R2000/V2000",
+     "Ryzen Threadripper PRO 3000WX/5000WX",
+     "Ryzen Z1 / Z1 Extreme",
+     "EPYC 7002 and newer"
+    ],
+    "list_version": "Windows 11 version 24H2",
+    "page_ms_date": "2025-08-08",
+    "source": "https://learn.microsoft.com/en-us/windows-hardware/design/minimum/supported/windows-11-24h2-supported-amd-processors"
+   },
+   "qualcomm": {
+    "rule": "Only 18 Qualcomm/Snapdragon parts are listed. The oldest Snapdragon-branded entries are Snapdragon 7c+ Gen 3 and Snapdragon 8cx Gen 2. Original Snapdragon 8cx (Gen 1) is NOT on the list.",
+    "models_on_list": [
+     "Snapdragon 7c+ Gen 3",
+     "Snapdragon 8cx Gen 2",
+     "Snapdragon 8cx Gen 3",
+     "QCM6490",
+     "QCS6490",
+     "QCM5430",
+     "QCS5430",
+     "Microsoft SQ1",
+     "Microsoft SQ2",
+     "Microsoft SQ3",
+     "Snapdragon X X1-26-100",
+     "Snapdragon X Elite X1E-78-100",
+     "Snapdragon X Elite X1E-80-100",
+     "Snapdragon X Elite X1E-84-100",
+     "Snapdragon X Plus X1P-42-100",
+     "Snapdragon X Plus X1P-46-100",
+     "Snapdragon X Plus X1P-64-100",
+     "Snapdragon X Plus X1P-66-100"
+    ],
+    "list_version": "Windows 11 version 24H2",
+    "page_ms_date": "2025-08-13",
+    "note": "ARM Windows machines are rare in the Japanese second-hand market, so this list matters far less than the Intel/AMD boundaries for a replace-vs-upgrade decision.",
+    "source": "https://learn.microsoft.com/en-us/windows-hardware/design/minimum/supported/windows-11-24h2-supported-qualcomm-processors",
+    "confidence": "high"
+   }
+  },
+  "windows10_end_of_support": {
+   "date": "2025-10-14",
+   "verbatim": "Windows 10 support ended on October 14, 2025 - technical assistance, feature updates and security updates is no longer provided.",
+   "source": "https://support.microsoft.com/en-us/windows/windows-10-support-ends-on-october-14-2025-2ca8b313-1946-43d3-b55c-2b95b107f281"
+  },
+  "consumer_esu": {
+   "program": "Windows 10 Consumer Extended Security Updates (ESU)",
+   "coverage_end": "2027-10-12",
+   "coverage_end_note": "Originally the consumer ESU ran one year to 2026-10-13. Microsoft extended it to 2027-10-12; multiple outlets reported this in June 2026 and the Microsoft page now states October 12, 2027.",
+   "enrollment_deadline": "2027-10-12",
+   "enrollment_options": [
+    {
+     "option": "Free - sync PC Settings (Windows Backup)",
+     "cost_usd": 0,
+     "verbatim": "At no additional cost if you are syncing your PC Settings",
+     "source": "https://www.microsoft.com/en-us/windows/extended-security-updates"
+    },
+    {
+     "option": "Microsoft Rewards points",
+     "cost_usd": 0,
+     "points": 1000,
+     "verbatim": "redeeming 1,000 Microsoft Rewards points",
+     "source": "https://www.microsoft.com/en-us/windows/extended-security-updates"
+    },
+    {
+     "option": "One-time purchase",
+     "cost_usd": 30,
+     "verbatim": "One-time purchase of $30 USD or local currency equivalent plus applicable tax",
+     "source": "https://www.microsoft.com/en-us/windows/extended-security-updates"
+    }
+   ],
+   "devices_per_license": 10,
+   "devices_verbatim": "You can use your existing ESU license for up to 10 devices once you enroll in ESU.",
+   "prerequisites": [
+    "Windows 10 version 22H2 (Home, Professional, Pro Education, or Workstations edition)",
+    "Signed in with a Microsoft account that is an administrator account on the device"
+   ],
+   "not_included": [
+    "new features / feature improvements",
+    "product enhancements",
+    "technical support"
+   ],
+   "not_included_verbatim": "ESU enrollment does not provide other types of fixes, feature improvements, or product enhancements. It also does not come with technical support.",
+   "scope": "critical and important security updates only, as defined by the Microsoft Security Response Center",
+   "source": "https://www.microsoft.com/en-us/windows/extended-security-updates",
+   "corroborating_sources": [
+    "https://www.bleepingcomputer.com/news/microsoft/microsoft-quietly-extends-free-windows-10-esu-support-to-october-2027/",
+    "https://www.helpnetsecurity.com/2026/06/26/microsoft-windows-10-free-security-updates-esu-program/",
+    "https://www.windowslatest.com/2026/06/25/windows-10-support-quietly-extended-until-oct-2027-as-users-reject-windows-11/"
+   ],
+   "confidence": "high"
+  },
+  "tpm_secureboot_fixable_in_bios": {
+   "summary": "Many PCs that fail the Windows 11 check actually HAVE a firmware TPM that is simply switched off in BIOS/UEFI. Turning it on can flip a machine from \"unsupported\" to \"supported\" with zero spend.",
+   "intel_setting_names": [
+    "Intel Platform Trust Technology",
+    "Intel PTT",
+    "PTT",
+    "Firmware TPM",
+    "Security Device Support",
+    "TPM Device Selection"
+   ],
+   "amd_setting_names": [
+    "AMD fTPM",
+    "AMD fTPM switch",
+    "AMD PSP fTPM",
+    "Firmware TPM",
+    "Security Device Support"
+   ],
+   "typical_bios_menus": [
+    "Security",
+    "Advanced",
+    "Trusted Computing",
+    "CPU Configuration"
+   ],
+   "secure_boot_note": "Secure Boot also requires the disk to be GPT/UEFI, not legacy MBR/CSM. Windows includes MBR2GPT to convert without reinstalling; switching CSM off before converting will make the PC fail to boot.",
+   "mbr2gpt_source": "https://learn.microsoft.com/en-us/windows/deployment/mbr-to-gpt",
+   "caveat": "Setting names and menu locations vary by motherboard vendor; these are the common labels reported across vendor guides, not a single official Microsoft list.",
+   "confidence": "medium",
+   "sources": [
+    "https://www.msi.com/blog/How-to-Enable-TPM-on-MSI-Motherboards-Featuring-TPM-2-0",
+    "https://www.ninjaone.com/blog/how-to-enable-tpm-2-0-on-a-windows-11-pc/",
+    "https://learn.microsoft.com/en-us/windows/deployment/mbr-to-gpt"
+   ]
+  },
+  "official_check_tool": {
+   "name": "PC Health Check",
+   "note": "Microsoft-provided app that reports exactly which requirement a PC fails.",
+   "source": "https://support.microsoft.com/en-us/windows/how-to-use-the-pc-health-check-app-9c8abd9b-03ba-4e67-81ef-36f37caa7844"
+  }
+ },
+ "cpus": [
+  {
+   "name": "i3-4130",
+   "fullName": "Intel Core i3-4130 @ 3.40GHz",
+   "vendor": "Intel",
+   "score": 3334,
+   "singleThread": 1875,
+   "cores": 2,
+   "threads": 4,
+   "tdp": 54,
+   "formFactor": "desktop",
+   "generation": "Core 4th (Haswell)",
+   "win11": false,
+   "year": 2013,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i34130",
+    "intelcorei34130340ghz",
+    "corei34130",
+    "inteli34130"
+   ]
+  },
+  {
+   "name": "i5-4460",
+   "fullName": "Intel Core i5-4460 @ 3.20GHz",
+   "vendor": "Intel",
+   "score": 4926,
+   "singleThread": 1902,
+   "cores": 4,
+   "threads": 4,
+   "tdp": 84,
+   "formFactor": "desktop",
+   "generation": "Core 4th (Haswell)",
+   "win11": false,
+   "year": 2014,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i54460",
+    "intelcorei54460320ghz",
+    "corei54460",
+    "inteli54460"
+   ]
+  },
+  {
+   "name": "i5-4590",
+   "fullName": "Intel Core i5-4590 @ 3.30GHz",
+   "vendor": "Intel",
+   "score": 5380,
+   "singleThread": 2080,
+   "cores": 4,
+   "threads": 4,
+   "tdp": 84,
+   "formFactor": "desktop",
+   "generation": "Core 4th (Haswell)",
+   "win11": false,
+   "year": 2014,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i54590",
+    "intelcorei54590330ghz",
+    "corei54590",
+    "inteli54590"
+   ]
+  },
+  {
+   "name": "i7-4770",
+   "fullName": "Intel Core i7-4770 @ 3.40GHz",
+   "vendor": "Intel",
+   "score": 7066,
+   "singleThread": 2170,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 84,
+   "formFactor": "desktop",
+   "generation": "Core 4th (Haswell)",
+   "win11": false,
+   "year": 2013,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i74770",
+    "intelcorei74770340ghz",
+    "corei74770",
+    "inteli74770"
+   ]
+  },
+  {
+   "name": "i7-4790K",
+   "fullName": "Intel Core i7-4790K @ 4.00GHz",
+   "vendor": "Intel",
+   "score": 8066,
+   "singleThread": 2465,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 88,
+   "formFactor": "desktop",
+   "generation": "Core 4th (Haswell)",
+   "win11": false,
+   "year": 2014,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i74790k",
+    "intelcorei74790k400ghz",
+    "corei74790k",
+    "inteli74790k"
+   ]
+  },
+  {
+   "name": "i3-6100",
+   "fullName": "Intel Core i3-6100 @ 3.70GHz",
+   "vendor": "Intel",
+   "score": 4091,
+   "singleThread": 2149,
+   "cores": 2,
+   "threads": 4,
+   "tdp": 51,
+   "formFactor": "desktop",
+   "generation": "Core 6th (Skylake)",
+   "win11": false,
+   "year": 2015,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i36100",
+    "intelcorei36100370ghz",
+    "corei36100",
+    "inteli36100"
+   ]
+  },
+  {
+   "name": "i5-6400",
+   "fullName": "Intel Core i5-6400 @ 2.70GHz",
+   "vendor": "Intel",
+   "score": 5178,
+   "singleThread": 1947,
+   "cores": 4,
+   "threads": 4,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 6th (Skylake)",
+   "win11": false,
+   "year": 2015,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i56400",
+    "intelcorei56400270ghz",
+    "corei56400",
+    "inteli56400"
+   ]
+  },
+  {
+   "name": "i5-6500",
+   "fullName": "Intel Core i5-6500 @ 3.20GHz",
+   "vendor": "Intel",
+   "score": 5600,
+   "singleThread": 2088,
+   "cores": 4,
+   "threads": 4,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 6th (Skylake)",
+   "win11": false,
+   "year": 2015,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i56500",
+    "intelcorei56500320ghz",
+    "corei56500",
+    "inteli56500"
+   ]
+  },
+  {
+   "name": "i7-6700",
+   "fullName": "Intel Core i7-6700 @ 3.40GHz",
+   "vendor": "Intel",
+   "score": 8033,
+   "singleThread": 2274,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 6th (Skylake)",
+   "win11": false,
+   "year": 2015,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i76700",
+    "intelcorei76700340ghz",
+    "corei76700",
+    "inteli76700"
+   ]
+  },
+  {
+   "name": "i7-6700K",
+   "fullName": "Intel Core i7-6700K @ 4.00GHz",
+   "vendor": "Intel",
+   "score": 8933,
+   "singleThread": 2495,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 95,
+   "formFactor": "desktop",
+   "generation": "Core 6th (Skylake)",
+   "win11": false,
+   "year": 2015,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i76700k",
+    "intelcorei76700k400ghz",
+    "corei76700k",
+    "inteli76700k"
+   ]
+  },
+  {
+   "name": "i3-7100",
+   "fullName": "Intel Core i3-7100 @ 3.90GHz",
+   "vendor": "Intel",
+   "score": 4317,
+   "singleThread": 2271,
+   "cores": 2,
+   "threads": 4,
+   "tdp": 51,
+   "formFactor": "desktop",
+   "generation": "Core 7th (Kaby Lake)",
+   "win11": false,
+   "year": 2017,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i37100",
+    "intelcorei37100390ghz",
+    "corei37100",
+    "inteli37100"
+   ]
+  },
+  {
+   "name": "i5-7400",
+   "fullName": "Intel Core i5-7400 @ 3.00GHz",
+   "vendor": "Intel",
+   "score": 5481,
+   "singleThread": 2068,
+   "cores": 4,
+   "threads": 4,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 7th (Kaby Lake)",
+   "win11": false,
+   "year": 2017,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i57400",
+    "intelcorei57400300ghz",
+    "corei57400",
+    "inteli57400"
+   ]
+  },
+  {
+   "name": "i5-7500",
+   "fullName": "Intel Core i5-7500 @ 3.40GHz",
+   "vendor": "Intel",
+   "score": 6039,
+   "singleThread": 2244,
+   "cores": 4,
+   "threads": 4,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 7th (Kaby Lake)",
+   "win11": false,
+   "year": 2017,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i57500",
+    "intelcorei57500340ghz",
+    "corei57500",
+    "inteli57500"
+   ]
+  },
+  {
+   "name": "i7-7700",
+   "fullName": "Intel Core i7-7700 @ 3.60GHz",
+   "vendor": "Intel",
+   "score": 8641,
+   "singleThread": 2441,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 7th (Kaby Lake)",
+   "win11": false,
+   "year": 2017,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i77700",
+    "intelcorei77700360ghz",
+    "corei77700",
+    "inteli77700"
+   ]
+  },
+  {
+   "name": "i7-7700K",
+   "fullName": "Intel Core i7-7700K @ 4.20GHz",
+   "vendor": "Intel",
+   "score": 9634,
+   "singleThread": 2700,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 95,
+   "formFactor": "desktop",
+   "generation": "Core 7th (Kaby Lake)",
+   "win11": false,
+   "year": 2017,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i77700k",
+    "intelcorei77700k420ghz",
+    "corei77700k",
+    "inteli77700k"
+   ]
+  },
+  {
+   "name": "i3-8100",
+   "fullName": "Intel Core i3-8100 @ 3.60GHz",
+   "vendor": "Intel",
+   "score": 6051,
+   "singleThread": 2186,
+   "cores": 4,
+   "threads": 4,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 8th (Coffee Lake)",
+   "win11": true,
+   "year": 2017,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i38100",
+    "intelcorei38100360ghz",
+    "corei38100",
+    "inteli38100"
+   ]
+  },
+  {
+   "name": "i5-8400",
+   "fullName": "Intel Core i5-8400 @ 2.80GHz",
+   "vendor": "Intel",
+   "score": 9232,
+   "singleThread": 2364,
+   "cores": 6,
+   "threads": 6,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 8th (Coffee Lake)",
+   "win11": true,
+   "year": 2017,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i58400",
+    "intelcorei58400280ghz",
+    "corei58400",
+    "inteli58400"
+   ]
+  },
+  {
+   "name": "i5-8500",
+   "fullName": "Intel Core i5-8500 @ 3.00GHz",
+   "vendor": "Intel",
+   "score": 9504,
+   "singleThread": 2429,
+   "cores": 6,
+   "threads": 6,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 8th (Coffee Lake)",
+   "win11": true,
+   "year": 2018,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i58500",
+    "intelcorei58500300ghz",
+    "corei58500",
+    "inteli58500"
+   ]
+  },
+  {
+   "name": "i7-8700",
+   "fullName": "Intel Core i7-8700 @ 3.20GHz",
+   "vendor": "Intel",
+   "score": 12742,
+   "singleThread": 2625,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 8th (Coffee Lake)",
+   "win11": true,
+   "year": 2017,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i78700",
+    "intelcorei78700320ghz",
+    "corei78700",
+    "inteli78700"
+   ]
+  },
+  {
+   "name": "i7-8700K",
+   "fullName": "Intel Core i7-8700K @ 3.70GHz",
+   "vendor": "Intel",
+   "score": 13560,
+   "singleThread": 2714,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 95,
+   "formFactor": "desktop",
+   "generation": "Core 8th (Coffee Lake)",
+   "win11": true,
+   "year": 2017,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i78700k",
+    "intelcorei78700k370ghz",
+    "corei78700k",
+    "inteli78700k"
+   ]
+  },
+  {
+   "name": "i3-9100",
+   "fullName": "Intel Core i3-9100 @ 3.60GHz",
+   "vendor": "Intel",
+   "score": 6616,
+   "singleThread": 2466,
+   "cores": 4,
+   "threads": 4,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 9th (Coffee Lake R)",
+   "win11": true,
+   "year": 2019,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i39100",
+    "intelcorei39100360ghz",
+    "corei39100",
+    "inteli39100"
+   ]
+  },
+  {
+   "name": "i5-9400",
+   "fullName": "Intel Core i5-9400 @ 2.90GHz",
+   "vendor": "Intel",
+   "score": 9353,
+   "singleThread": 2413,
+   "cores": 6,
+   "threads": 6,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 9th (Coffee Lake R)",
+   "win11": true,
+   "year": 2019,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i59400",
+    "intelcorei59400290ghz",
+    "corei59400",
+    "inteli59400"
+   ]
+  },
+  {
+   "name": "i5-9500",
+   "fullName": "Intel Core i5-9500 @ 3.00GHz",
+   "vendor": "Intel",
+   "score": 9850,
+   "singleThread": 2567,
+   "cores": 6,
+   "threads": 6,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 9th (Coffee Lake R)",
+   "win11": true,
+   "year": 2019,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i59500",
+    "intelcorei59500300ghz",
+    "corei59500",
+    "inteli59500"
+   ]
+  },
+  {
+   "name": "i7-9700",
+   "fullName": "Intel Core i7-9700 @ 3.00GHz",
+   "vendor": "Intel",
+   "score": 13175,
+   "singleThread": 2744,
+   "cores": 8,
+   "threads": 8,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 9th (Coffee Lake R)",
+   "win11": true,
+   "year": 2019,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i79700",
+    "intelcorei79700300ghz",
+    "corei79700",
+    "inteli79700"
+   ]
+  },
+  {
+   "name": "i7-9700K",
+   "fullName": "Intel Core i7-9700K @ 3.60GHz",
+   "vendor": "Intel",
+   "score": 14400,
+   "singleThread": 2857,
+   "cores": 8,
+   "threads": 8,
+   "tdp": 95,
+   "formFactor": "desktop",
+   "generation": "Core 9th (Coffee Lake R)",
+   "win11": true,
+   "year": 2018,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i79700k",
+    "intelcorei79700k360ghz",
+    "corei79700k",
+    "inteli79700k"
+   ]
+  },
+  {
+   "name": "i3-10100",
+   "fullName": "Intel Core i3-10100 @ 3.60GHz",
+   "vendor": "Intel",
+   "score": 8482,
+   "singleThread": 2586,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 10th (Comet Lake)",
+   "win11": true,
+   "year": 2020,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i310100",
+    "intelcorei310100360ghz",
+    "corei310100",
+    "inteli310100"
+   ]
+  },
+  {
+   "name": "i5-10400",
+   "fullName": "Intel Core i5-10400 @ 2.90GHz",
+   "vendor": "Intel",
+   "score": 11970,
+   "singleThread": 2556,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 10th (Comet Lake)",
+   "win11": true,
+   "year": 2020,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i510400",
+    "intelcorei510400290ghz",
+    "corei510400",
+    "inteli510400"
+   ]
+  },
+  {
+   "name": "i5-10500",
+   "fullName": "Intel Core i5-10500 @ 3.10GHz",
+   "vendor": "Intel",
+   "score": 12914,
+   "singleThread": 2781,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 10th (Comet Lake)",
+   "win11": true,
+   "year": 2020,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i510500",
+    "intelcorei510500310ghz",
+    "corei510500",
+    "inteli510500"
+   ]
+  },
+  {
+   "name": "i7-10700",
+   "fullName": "Intel Core i7-10700 @ 2.90GHz",
+   "vendor": "Intel",
+   "score": 15982,
+   "singleThread": 2879,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 10th (Comet Lake)",
+   "win11": true,
+   "year": 2020,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i710700",
+    "intelcorei710700290ghz",
+    "corei710700",
+    "inteli710700"
+   ]
+  },
+  {
+   "name": "i7-10700K",
+   "fullName": "Intel Core i7-10700K @ 3.80GHz",
+   "vendor": "Intel",
+   "score": 18503,
+   "singleThread": 3036,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 125,
+   "formFactor": "desktop",
+   "generation": "Core 10th (Comet Lake)",
+   "win11": true,
+   "year": 2020,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i710700k",
+    "intelcorei710700k380ghz",
+    "corei710700k",
+    "inteli710700k"
+   ]
+  },
+  {
+   "name": "i5-11400",
+   "fullName": "Intel Core i5-11400 @ 2.60GHz",
+   "vendor": "Intel",
+   "score": 16626,
+   "singleThread": 2982,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 11th (Rocket Lake)",
+   "win11": true,
+   "year": 2021,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i511400",
+    "intelcorei511400260ghz",
+    "corei511400",
+    "inteli511400"
+   ]
+  },
+  {
+   "name": "i5-11500",
+   "fullName": "Intel Core i5-11500 @ 2.70GHz",
+   "vendor": "Intel",
+   "score": 17073,
+   "singleThread": 3131,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 11th (Rocket Lake)",
+   "win11": true,
+   "year": 2021,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i511500",
+    "intelcorei511500270ghz",
+    "corei511500",
+    "inteli511500"
+   ]
+  },
+  {
+   "name": "i7-11700",
+   "fullName": "Intel Core i7-11700 @ 2.50GHz",
+   "vendor": "Intel",
+   "score": 20590,
+   "singleThread": 3256,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 11th (Rocket Lake)",
+   "win11": true,
+   "year": 2021,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i711700",
+    "intelcorei711700250ghz",
+    "corei711700",
+    "inteli711700"
+   ]
+  },
+  {
+   "name": "i7-11700K",
+   "fullName": "Intel Core i7-11700K @ 3.60GHz",
+   "vendor": "Intel",
+   "score": 24314,
+   "singleThread": 3385,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 125,
+   "formFactor": "desktop",
+   "generation": "Core 11th (Rocket Lake)",
+   "win11": true,
+   "year": 2021,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i711700k",
+    "intelcorei711700k360ghz",
+    "corei711700k",
+    "inteli711700k"
+   ]
+  },
+  {
+   "name": "i3-12100",
+   "fullName": "Intel Core i3-12100",
+   "vendor": "Intel",
+   "score": 12505,
+   "singleThread": 3241,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 60,
+   "formFactor": "desktop",
+   "generation": "Core 12th (Alder Lake)",
+   "win11": true,
+   "year": 2022,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i312100",
+    "intelcorei312100",
+    "corei312100",
+    "inteli312100"
+   ]
+  },
+  {
+   "name": "i5-12400",
+   "fullName": "Intel Core i5-12400",
+   "vendor": "Intel",
+   "score": 18816,
+   "singleThread": 3464,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 12th (Alder Lake)",
+   "win11": true,
+   "year": 2022,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i512400",
+    "intelcorei512400",
+    "corei512400",
+    "inteli512400"
+   ]
+  },
+  {
+   "name": "i5-12500",
+   "fullName": "Intel Core i5-12500",
+   "vendor": "Intel",
+   "score": 19715,
+   "singleThread": 3649,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 12th (Alder Lake)",
+   "win11": true,
+   "year": 2022,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i512500",
+    "intelcorei512500",
+    "corei512500",
+    "inteli512500"
+   ]
+  },
+  {
+   "name": "i5-12600K",
+   "fullName": "Intel Core i5-12600K",
+   "vendor": "Intel",
+   "score": 27512,
+   "singleThread": 3917,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 150,
+   "formFactor": "desktop",
+   "generation": "Core 12th (Alder Lake)",
+   "win11": true,
+   "year": 2021,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i512600k",
+    "intelcorei512600k",
+    "corei512600k",
+    "inteli512600k"
+   ]
+  },
+  {
+   "name": "i7-12700K",
+   "fullName": "Intel Core i7-12700K",
+   "vendor": "Intel",
+   "score": 34256,
+   "singleThread": 4003,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 190,
+   "formFactor": "desktop",
+   "generation": "Core 12th (Alder Lake)",
+   "win11": true,
+   "year": 2021,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i712700k",
+    "intelcorei712700k",
+    "corei712700k",
+    "inteli712700k"
+   ]
+  },
+  {
+   "name": "i3-13100",
+   "fullName": "Intel Core i3-13100",
+   "vendor": "Intel",
+   "score": 14103,
+   "singleThread": 3536,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 60,
+   "formFactor": "desktop",
+   "generation": "Core 13th (Raptor Lake)",
+   "win11": true,
+   "year": 2023,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i313100",
+    "intelcorei313100",
+    "corei313100",
+    "inteli313100"
+   ]
+  },
+  {
+   "name": "i5-13400",
+   "fullName": "Intel Core i5-13400",
+   "vendor": "Intel",
+   "score": 23892,
+   "singleThread": 3583,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 154,
+   "formFactor": "desktop",
+   "generation": "Core 13th (Raptor Lake)",
+   "win11": true,
+   "year": 2023,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i513400",
+    "intelcorei513400",
+    "corei513400",
+    "inteli513400"
+   ]
+  },
+  {
+   "name": "i5-13500",
+   "fullName": "Intel Core i5-13500",
+   "vendor": "Intel",
+   "score": 30776,
+   "singleThread": 3855,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 13th (Raptor Lake)",
+   "win11": true,
+   "year": 2023,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i513500",
+    "intelcorei513500",
+    "corei513500",
+    "inteli513500"
+   ]
+  },
+  {
+   "name": "i5-13600K",
+   "fullName": "Intel Core i5-13600K",
+   "vendor": "Intel",
+   "score": 37464,
+   "singleThread": 4112,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 125,
+   "formFactor": "desktop",
+   "generation": "Core 13th (Raptor Lake)",
+   "win11": true,
+   "year": 2022,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i513600k",
+    "intelcorei513600k",
+    "corei513600k",
+    "inteli513600k"
+   ]
+  },
+  {
+   "name": "i7-13700K",
+   "fullName": "Intel Core i7-13700K",
+   "vendor": "Intel",
+   "score": 45616,
+   "singleThread": 4325,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 125,
+   "formFactor": "desktop",
+   "generation": "Core 13th (Raptor Lake)",
+   "win11": true,
+   "year": 2022,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i713700k",
+    "intelcorei713700k",
+    "corei713700k",
+    "inteli713700k"
+   ]
+  },
+  {
+   "name": "i5-14400",
+   "fullName": "Intel Core i5-14400",
+   "vendor": "Intel",
+   "score": 25082,
+   "singleThread": 3743,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Core 14th (Raptor Lake R)",
+   "win11": true,
+   "year": 2024,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i514400",
+    "intelcorei514400",
+    "corei514400",
+    "inteli514400"
+   ]
+  },
+  {
+   "name": "i5-14600K",
+   "fullName": "Intel Core i5-14600K",
+   "vendor": "Intel",
+   "score": 38408,
+   "singleThread": 4268,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 125,
+   "formFactor": "desktop",
+   "generation": "Core 14th (Raptor Lake R)",
+   "win11": true,
+   "year": 2023,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i514600k",
+    "intelcorei514600k",
+    "corei514600k",
+    "inteli514600k"
+   ]
+  },
+  {
+   "name": "i7-14700K",
+   "fullName": "Intel Core i7-14700K",
+   "vendor": "Intel",
+   "score": 51949,
+   "singleThread": 4455,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 125,
+   "formFactor": "desktop",
+   "generation": "Core 14th (Raptor Lake R)",
+   "win11": true,
+   "year": 2023,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i714700k",
+    "intelcorei714700k",
+    "corei714700k",
+    "inteli714700k"
+   ]
+  },
+  {
+   "name": "i9-14900K",
+   "fullName": "Intel Core i9-14900K",
+   "vendor": "Intel",
+   "score": 58244,
+   "singleThread": 4690,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 125,
+   "formFactor": "desktop",
+   "generation": "Core 14th (Raptor Lake R)",
+   "win11": true,
+   "year": 2023,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i914900k",
+    "intelcorei914900k",
+    "corei914900k",
+    "inteli914900k"
+   ]
+  },
+  {
+   "name": "Ultra 5 245K",
+   "fullName": "Intel Core Ultra 5 245K",
+   "vendor": "Intel",
+   "score": 43054,
+   "singleThread": 4714,
+   "cores": 6,
+   "threads": 6,
+   "tdp": 125,
+   "formFactor": "desktop",
+   "generation": "Core Ultra 200S (Arrow Lake)",
+   "win11": true,
+   "year": 2024,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ultra5245k",
+    "intelcoreultra5245k",
+    "coreultra5245k",
+    "intelultra5245k"
+   ]
+  },
+  {
+   "name": "Ultra 7 265K",
+   "fullName": "Intel Core Ultra 7 265K",
+   "vendor": "Intel",
+   "score": 58590,
+   "singleThread": 4928,
+   "cores": 8,
+   "threads": 8,
+   "tdp": 125,
+   "formFactor": "desktop",
+   "generation": "Core Ultra 200S (Arrow Lake)",
+   "win11": true,
+   "year": 2024,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ultra7265k",
+    "intelcoreultra7265k",
+    "coreultra7265k",
+    "intelultra7265k"
+   ]
+  },
+  {
+   "name": "Ultra 9 285K",
+   "fullName": "Intel Core Ultra 9 285K",
+   "vendor": "Intel",
+   "score": 67229,
+   "singleThread": 5085,
+   "cores": 8,
+   "threads": 8,
+   "tdp": 125,
+   "formFactor": "desktop",
+   "generation": "Core Ultra 200S (Arrow Lake)",
+   "win11": true,
+   "year": 2024,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ultra9285k",
+    "intelcoreultra9285k",
+    "coreultra9285k",
+    "intelultra9285k"
+   ]
+  },
+  {
+   "name": "i5-4200U",
+   "fullName": "Intel Core i5-4200U @ 1.60GHz",
+   "vendor": "Intel",
+   "score": 2179,
+   "singleThread": 1284,
+   "cores": 2,
+   "threads": 4,
+   "tdp": 15,
+   "formFactor": "laptop",
+   "generation": "Core 4th (Haswell-U)",
+   "win11": false,
+   "year": 2013,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i54200u",
+    "intelcorei54200u160ghz",
+    "corei54200u",
+    "inteli54200u"
+   ]
+  },
+  {
+   "name": "i7-4700MQ",
+   "fullName": "Intel Core i7-4700MQ @ 2.40GHz",
+   "vendor": "Intel",
+   "score": 5354,
+   "singleThread": 1759,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 47,
+   "formFactor": "laptop",
+   "generation": "Core 4th (Haswell-MQ)",
+   "win11": false,
+   "year": 2013,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i74700mq",
+    "intelcorei74700mq240ghz",
+    "corei74700mq",
+    "inteli74700mq"
+   ]
+  },
+  {
+   "name": "i5-5200U",
+   "fullName": "Intel Core i5-5200U @ 2.20GHz",
+   "vendor": "Intel",
+   "score": 2500,
+   "singleThread": 1489,
+   "cores": 2,
+   "threads": 4,
+   "tdp": 15,
+   "formFactor": "laptop",
+   "generation": "Core 5th (Broadwell-U)",
+   "win11": false,
+   "year": 2015,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i55200u",
+    "intelcorei55200u220ghz",
+    "corei55200u",
+    "inteli55200u"
+   ]
+  },
+  {
+   "name": "i5-6200U",
+   "fullName": "Intel Core i5-6200U @ 2.30GHz",
+   "vendor": "Intel",
+   "score": 2993,
+   "singleThread": 1535,
+   "cores": 2,
+   "threads": 4,
+   "tdp": 15,
+   "formFactor": "laptop",
+   "generation": "Core 6th (Skylake-U)",
+   "win11": false,
+   "year": 2015,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i56200u",
+    "intelcorei56200u230ghz",
+    "corei56200u",
+    "inteli56200u"
+   ]
+  },
+  {
+   "name": "i7-6500U",
+   "fullName": "Intel Core i7-6500U @ 2.50GHz",
+   "vendor": "Intel",
+   "score": 3273,
+   "singleThread": 1684,
+   "cores": 2,
+   "threads": 4,
+   "tdp": 15,
+   "formFactor": "laptop",
+   "generation": "Core 6th (Skylake-U)",
+   "win11": false,
+   "year": 2015,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i76500u",
+    "intelcorei76500u250ghz",
+    "corei76500u",
+    "inteli76500u"
+   ]
+  },
+  {
+   "name": "i5-7200U",
+   "fullName": "Intel Core i5-7200U @ 2.50GHz",
+   "vendor": "Intel",
+   "score": 3371,
+   "singleThread": 1728,
+   "cores": 2,
+   "threads": 4,
+   "tdp": 15,
+   "formFactor": "laptop",
+   "generation": "Core 7th (Kaby Lake-U)",
+   "win11": false,
+   "year": 2016,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i57200u",
+    "intelcorei57200u250ghz",
+    "corei57200u",
+    "inteli57200u"
+   ]
+  },
+  {
+   "name": "i7-7500U",
+   "fullName": "Intel Core i7-7500U @ 2.70GHz",
+   "vendor": "Intel",
+   "score": 3635,
+   "singleThread": 1899,
+   "cores": 2,
+   "threads": 4,
+   "tdp": 15,
+   "formFactor": "laptop",
+   "generation": "Core 7th (Kaby Lake-U)",
+   "win11": false,
+   "year": 2016,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i77500u",
+    "intelcorei77500u270ghz",
+    "corei77500u",
+    "inteli77500u"
+   ]
+  },
+  {
+   "name": "i5-8250U",
+   "fullName": "Intel Core i5-8250U @ 1.60GHz",
+   "vendor": "Intel",
+   "score": 5784,
+   "singleThread": 1871,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 15,
+   "formFactor": "laptop",
+   "generation": "Core 8th (Kaby Lake R)",
+   "win11": true,
+   "year": 2017,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i58250u",
+    "intelcorei58250u160ghz",
+    "corei58250u",
+    "inteli58250u"
+   ]
+  },
+  {
+   "name": "i5-8265U",
+   "fullName": "Intel Core i5-8265U @ 1.60GHz",
+   "vendor": "Intel",
+   "score": 5774,
+   "singleThread": 2006,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 15,
+   "formFactor": "laptop",
+   "generation": "Core 8th (Whiskey Lake)",
+   "win11": true,
+   "year": 2018,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i58265u",
+    "intelcorei58265u160ghz",
+    "corei58265u",
+    "inteli58265u"
+   ]
+  },
+  {
+   "name": "i7-8550U",
+   "fullName": "Intel Core i7-8550U @ 1.80GHz",
+   "vendor": "Intel",
+   "score": 5797,
+   "singleThread": 2003,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 15,
+   "formFactor": "laptop",
+   "generation": "Core 8th (Kaby Lake R)",
+   "win11": true,
+   "year": 2017,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i78550u",
+    "intelcorei78550u180ghz",
+    "corei78550u",
+    "inteli78550u"
+   ]
+  },
+  {
+   "name": "i5-10210U",
+   "fullName": "Intel Core i5-10210U @ 1.60GHz",
+   "vendor": "Intel",
+   "score": 6021,
+   "singleThread": 2097,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 15,
+   "formFactor": "laptop",
+   "generation": "Core 10th (Comet Lake-U)",
+   "win11": true,
+   "year": 2019,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i510210u",
+    "intelcorei510210u160ghz",
+    "corei510210u",
+    "inteli510210u"
+   ]
+  },
+  {
+   "name": "i7-1065G7",
+   "fullName": "Intel Core i7-1065G7 @ 1.30GHz",
+   "vendor": "Intel",
+   "score": 8077,
+   "singleThread": 2270,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 15,
+   "formFactor": "laptop",
+   "generation": "Core 10th (Ice Lake)",
+   "win11": true,
+   "year": 2019,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i71065g7",
+    "intelcorei71065g7130ghz",
+    "corei71065g7",
+    "inteli71065g7"
+   ]
+  },
+  {
+   "name": "i5-1135G7",
+   "fullName": "Intel Core i5-1135G7 @ 2.40GHz",
+   "vendor": "Intel",
+   "score": 9301,
+   "singleThread": 2597,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 15,
+   "formFactor": "laptop",
+   "generation": "Core 11th (Tiger Lake)",
+   "win11": true,
+   "year": 2020,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i51135g7",
+    "intelcorei51135g7240ghz",
+    "corei51135g7",
+    "inteli51135g7"
+   ]
+  },
+  {
+   "name": "i7-1165G7",
+   "fullName": "Intel Core i7-1165G7 @ 2.80GHz",
+   "vendor": "Intel",
+   "score": 9757,
+   "singleThread": 2718,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 15,
+   "formFactor": "laptop",
+   "generation": "Core 11th (Tiger Lake)",
+   "win11": true,
+   "year": 2020,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i71165g7",
+    "intelcorei71165g7280ghz",
+    "corei71165g7",
+    "inteli71165g7"
+   ]
+  },
+  {
+   "name": "i5-1235U",
+   "fullName": "Intel Core i5-1235U",
+   "vendor": "Intel",
+   "score": 12448,
+   "singleThread": 3051,
+   "cores": 2,
+   "threads": 4,
+   "tdp": 15,
+   "formFactor": "laptop",
+   "generation": "Core 12th (Alder Lake-U)",
+   "win11": true,
+   "year": 2022,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i51235u",
+    "intelcorei51235u",
+    "corei51235u",
+    "inteli51235u"
+   ]
+  },
+  {
+   "name": "i7-1255U",
+   "fullName": "Intel Core i7-1255U",
+   "vendor": "Intel",
+   "score": 12978,
+   "singleThread": 3149,
+   "cores": 2,
+   "threads": 4,
+   "tdp": 15,
+   "formFactor": "laptop",
+   "generation": "Core 12th (Alder Lake-U)",
+   "win11": true,
+   "year": 2022,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i71255u",
+    "intelcorei71255u",
+    "corei71255u",
+    "inteli71255u"
+   ]
+  },
+  {
+   "name": "i7-12700H",
+   "fullName": "Intel Core i7-12700H",
+   "vendor": "Intel",
+   "score": 24971,
+   "singleThread": 3482,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 45,
+   "formFactor": "laptop",
+   "generation": "Core 12th (Alder Lake-H)",
+   "win11": true,
+   "year": 2022,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i712700h",
+    "intelcorei712700h",
+    "corei712700h",
+    "inteli712700h"
+   ]
+  },
+  {
+   "name": "i5-1335U",
+   "fullName": "Intel Core i5-1335U",
+   "vendor": "Intel",
+   "score": 13816,
+   "singleThread": 3248,
+   "cores": 2,
+   "threads": 4,
+   "tdp": 15,
+   "formFactor": "laptop",
+   "generation": "Core 13th (Raptor Lake-U)",
+   "win11": true,
+   "year": 2023,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i51335u",
+    "intelcorei51335u",
+    "corei51335u",
+    "inteli51335u"
+   ]
+  },
+  {
+   "name": "i7-13700H",
+   "fullName": "Intel Core i7-13700H",
+   "vendor": "Intel",
+   "score": 25850,
+   "singleThread": 3553,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 45,
+   "formFactor": "laptop",
+   "generation": "Core 13th (Raptor Lake-H)",
+   "win11": true,
+   "year": 2023,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "i713700h",
+    "intelcorei713700h",
+    "corei713700h",
+    "inteli713700h"
+   ]
+  },
+  {
+   "name": "Ultra 7 155H",
+   "fullName": "Intel Core Ultra 7 155H",
+   "vendor": "Intel",
+   "score": 24514,
+   "singleThread": 3410,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 28,
+   "formFactor": "laptop",
+   "generation": "Core Ultra 100 (Meteor Lake)",
+   "win11": true,
+   "year": 2023,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ultra7155h",
+    "intelcoreultra7155h",
+    "coreultra7155h",
+    "intelultra7155h"
+   ]
+  },
+  {
+   "name": "Ultra 7 258V",
+   "fullName": "Intel Core Ultra 7 258V",
+   "vendor": "Intel",
+   "score": 18883,
+   "singleThread": 4016,
+   "cores": 4,
+   "threads": 4,
+   "tdp": 17,
+   "formFactor": "laptop",
+   "generation": "Core Ultra 200V (Lunar Lake)",
+   "win11": true,
+   "year": 2024,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ultra7258v",
+    "intelcoreultra7258v",
+    "coreultra7258v",
+    "intelultra7258v"
+   ]
+  },
+  {
+   "name": "Ryzen 3 1200",
+   "fullName": "AMD Ryzen 3 1200",
+   "vendor": "AMD",
+   "score": 6267,
+   "singleThread": 1925,
+   "cores": 4,
+   "threads": 4,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 1000 (Zen)",
+   "win11": false,
+   "year": 2017,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen31200",
+    "amdryzen31200",
+    "coreryzen31200",
+    "amdryzen31200"
+   ]
+  },
+  {
+   "name": "Ryzen 5 1400",
+   "fullName": "AMD Ryzen 5 1400",
+   "vendor": "AMD",
+   "score": 7745,
+   "singleThread": 1890,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 1000 (Zen)",
+   "win11": false,
+   "year": 2017,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen51400",
+    "amdryzen51400",
+    "coreryzen51400",
+    "amdryzen51400"
+   ]
+  },
+  {
+   "name": "Ryzen 5 1600",
+   "fullName": "AMD Ryzen 5 1600",
+   "vendor": "AMD",
+   "score": 12247,
+   "singleThread": 2064,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 1000 (Zen)",
+   "win11": false,
+   "year": 2017,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen51600",
+    "amdryzen51600",
+    "coreryzen51600",
+    "amdryzen51600"
+   ]
+  },
+  {
+   "name": "Ryzen 7 1700",
+   "fullName": "AMD Ryzen 7 1700",
+   "vendor": "AMD",
+   "score": 14747,
+   "singleThread": 1998,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 1000 (Zen)",
+   "win11": false,
+   "year": 2017,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen71700",
+    "amdryzen71700",
+    "coreryzen71700",
+    "amdryzen71700"
+   ]
+  },
+  {
+   "name": "Ryzen 7 1800X",
+   "fullName": "AMD Ryzen 7 1800X",
+   "vendor": "AMD",
+   "score": 16268,
+   "singleThread": 2197,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 95,
+   "formFactor": "desktop",
+   "generation": "Ryzen 1000 (Zen)",
+   "win11": false,
+   "year": 2017,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen71800x",
+    "amdryzen71800x",
+    "coreryzen71800x",
+    "amdryzen71800x"
+   ]
+  },
+  {
+   "name": "Ryzen 3 2200G",
+   "fullName": "AMD Ryzen 3 2200G",
+   "vendor": "AMD",
+   "score": 6708,
+   "singleThread": 2038,
+   "cores": 4,
+   "threads": 4,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 2000G (Raven Ridge APU)",
+   "win11": false,
+   "year": 2018,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen32200g",
+    "amdryzen32200g",
+    "coreryzen32200g",
+    "amdryzen32200g"
+   ]
+  },
+  {
+   "name": "Ryzen 5 2400G",
+   "fullName": "AMD Ryzen 5 2400G",
+   "vendor": "AMD",
+   "score": 8719,
+   "singleThread": 2141,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 2000G (Raven Ridge APU)",
+   "win11": false,
+   "year": 2018,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen52400g",
+    "amdryzen52400g",
+    "coreryzen52400g",
+    "amdryzen52400g"
+   ]
+  },
+  {
+   "name": "Ryzen 5 2600",
+   "fullName": "AMD Ryzen 5 2600",
+   "vendor": "AMD",
+   "score": 13125,
+   "singleThread": 2234,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 2000 (Zen+)",
+   "win11": true,
+   "year": 2018,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen52600",
+    "amdryzen52600",
+    "coreryzen52600",
+    "amdryzen52600"
+   ]
+  },
+  {
+   "name": "Ryzen 5 2600X",
+   "fullName": "AMD Ryzen 5 2600X",
+   "vendor": "AMD",
+   "score": 13864,
+   "singleThread": 2378,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 95,
+   "formFactor": "desktop",
+   "generation": "Ryzen 2000 (Zen+)",
+   "win11": true,
+   "year": 2018,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen52600x",
+    "amdryzen52600x",
+    "coreryzen52600x",
+    "amdryzen52600x"
+   ]
+  },
+  {
+   "name": "Ryzen 7 2700",
+   "fullName": "AMD Ryzen 7 2700",
+   "vendor": "AMD",
+   "score": 15596,
+   "singleThread": 2170,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 2000 (Zen+)",
+   "win11": true,
+   "year": 2018,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen72700",
+    "amdryzen72700",
+    "coreryzen72700",
+    "amdryzen72700"
+   ]
+  },
+  {
+   "name": "Ryzen 7 2700X",
+   "fullName": "AMD Ryzen 7 2700X",
+   "vendor": "AMD",
+   "score": 17424,
+   "singleThread": 2414,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 105,
+   "formFactor": "desktop",
+   "generation": "Ryzen 2000 (Zen+)",
+   "win11": true,
+   "year": 2018,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen72700x",
+    "amdryzen72700x",
+    "coreryzen72700x",
+    "amdryzen72700x"
+   ]
+  },
+  {
+   "name": "Ryzen 3 3100",
+   "fullName": "AMD Ryzen 3 3100",
+   "vendor": "AMD",
+   "score": 11514,
+   "singleThread": 2410,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 3000 (Zen 2)",
+   "win11": true,
+   "year": 2020,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen33100",
+    "amdryzen33100",
+    "coreryzen33100",
+    "amdryzen33100"
+   ]
+  },
+  {
+   "name": "Ryzen 3 3200G",
+   "fullName": "AMD Ryzen 3 3200G",
+   "vendor": "AMD",
+   "score": 6974,
+   "singleThread": 2181,
+   "cores": 4,
+   "threads": 4,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 3000G (Picasso APU)",
+   "win11": true,
+   "year": 2019,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen33200g",
+    "amdryzen33200g",
+    "coreryzen33200g",
+    "amdryzen33200g"
+   ]
+  },
+  {
+   "name": "Ryzen 5 3400G",
+   "fullName": "AMD Ryzen 5 3400G",
+   "vendor": "AMD",
+   "score": 9162,
+   "singleThread": 2306,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 3000G (Picasso APU)",
+   "win11": true,
+   "year": 2019,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen53400g",
+    "amdryzen53400g",
+    "coreryzen53400g",
+    "amdryzen53400g"
+   ]
+  },
+  {
+   "name": "Ryzen 5 3500",
+   "fullName": "AMD Ryzen 5 3500",
+   "vendor": "AMD",
+   "score": 12753,
+   "singleThread": 2493,
+   "cores": 6,
+   "threads": 6,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 3000 (Zen 2)",
+   "win11": true,
+   "year": 2019,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen53500",
+    "amdryzen53500",
+    "coreryzen53500",
+    "amdryzen53500"
+   ]
+  },
+  {
+   "name": "Ryzen 5 3600",
+   "fullName": "AMD Ryzen 5 3600",
+   "vendor": "AMD",
+   "score": 17655,
+   "singleThread": 2558,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 3000 (Zen 2)",
+   "win11": true,
+   "year": 2019,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen53600",
+    "amdryzen53600",
+    "coreryzen53600",
+    "amdryzen53600"
+   ]
+  },
+  {
+   "name": "Ryzen 7 3700X",
+   "fullName": "AMD Ryzen 7 3700X",
+   "vendor": "AMD",
+   "score": 22386,
+   "singleThread": 2654,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 3000 (Zen 2)",
+   "win11": true,
+   "year": 2019,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen73700x",
+    "amdryzen73700x",
+    "coreryzen73700x",
+    "amdryzen73700x"
+   ]
+  },
+  {
+   "name": "Ryzen 9 3900X",
+   "fullName": "AMD Ryzen 9 3900X",
+   "vendor": "AMD",
+   "score": 32475,
+   "singleThread": 2702,
+   "cores": 12,
+   "threads": 24,
+   "tdp": 105,
+   "formFactor": "desktop",
+   "generation": "Ryzen 3000 (Zen 2)",
+   "win11": true,
+   "year": 2019,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen93900x",
+    "amdryzen93900x",
+    "coreryzen93900x",
+    "amdryzen93900x"
+   ]
+  },
+  {
+   "name": "Ryzen 5 4500",
+   "fullName": "AMD Ryzen 5 4500",
+   "vendor": "AMD",
+   "score": 15945,
+   "singleThread": 2585,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 4000 (Zen 2)",
+   "win11": true,
+   "year": 2022,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen54500",
+    "amdryzen54500",
+    "coreryzen54500",
+    "amdryzen54500"
+   ]
+  },
+  {
+   "name": "Ryzen 5 4600G",
+   "fullName": "AMD Ryzen 5 4600G",
+   "vendor": "AMD",
+   "score": 15925,
+   "singleThread": 2647,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 4000G (Renoir APU)",
+   "win11": true,
+   "year": 2020,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen54600g",
+    "amdryzen54600g",
+    "coreryzen54600g",
+    "amdryzen54600g"
+   ]
+  },
+  {
+   "name": "Ryzen 5 5500",
+   "fullName": "AMD Ryzen 5 5500",
+   "vendor": "AMD",
+   "score": 19248,
+   "singleThread": 3061,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 5000 (Zen 3)",
+   "win11": true,
+   "year": 2022,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen55500",
+    "amdryzen55500",
+    "coreryzen55500",
+    "amdryzen55500"
+   ]
+  },
+  {
+   "name": "Ryzen 5 5600",
+   "fullName": "AMD Ryzen 5 5600",
+   "vendor": "AMD",
+   "score": 21495,
+   "singleThread": 3253,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 5000 (Zen 3)",
+   "win11": true,
+   "year": 2022,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen55600",
+    "amdryzen55600",
+    "coreryzen55600",
+    "amdryzen55600"
+   ]
+  },
+  {
+   "name": "Ryzen 5 5600G",
+   "fullName": "AMD Ryzen 5 5600G",
+   "vendor": "AMD",
+   "score": 19627,
+   "singleThread": 3178,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 5000G (Cezanne APU)",
+   "win11": true,
+   "year": 2021,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen55600g",
+    "amdryzen55600g",
+    "coreryzen55600g",
+    "amdryzen55600g"
+   ]
+  },
+  {
+   "name": "Ryzen 5 5600X",
+   "fullName": "AMD Ryzen 5 5600X",
+   "vendor": "AMD",
+   "score": 21824,
+   "singleThread": 3366,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 5000 (Zen 3)",
+   "win11": true,
+   "year": 2020,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen55600x",
+    "amdryzen55600x",
+    "coreryzen55600x",
+    "amdryzen55600x"
+   ]
+  },
+  {
+   "name": "Ryzen 7 5700G",
+   "fullName": "AMD Ryzen 7 5700G",
+   "vendor": "AMD",
+   "score": 24228,
+   "singleThread": 3282,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 5000G (Cezanne APU)",
+   "win11": true,
+   "year": 2021,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen75700g",
+    "amdryzen75700g",
+    "coreryzen75700g",
+    "amdryzen75700g"
+   ]
+  },
+  {
+   "name": "Ryzen 7 5700X",
+   "fullName": "AMD Ryzen 7 5700X",
+   "vendor": "AMD",
+   "score": 26561,
+   "singleThread": 3386,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 5000 (Zen 3)",
+   "win11": true,
+   "year": 2022,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen75700x",
+    "amdryzen75700x",
+    "coreryzen75700x",
+    "amdryzen75700x"
+   ]
+  },
+  {
+   "name": "Ryzen 7 5800X",
+   "fullName": "AMD Ryzen 7 5800X",
+   "vendor": "AMD",
+   "score": 27661,
+   "singleThread": 3448,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 105,
+   "formFactor": "desktop",
+   "generation": "Ryzen 5000 (Zen 3)",
+   "win11": true,
+   "year": 2020,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen75800x",
+    "amdryzen75800x",
+    "coreryzen75800x",
+    "amdryzen75800x"
+   ]
+  },
+  {
+   "name": "Ryzen 7 5800X3D",
+   "fullName": "AMD Ryzen 7 5800X3D",
+   "vendor": "AMD",
+   "score": 28289,
+   "singleThread": 3233,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 105,
+   "formFactor": "desktop",
+   "generation": "Ryzen 5000 (Zen 3 V-Cache)",
+   "win11": true,
+   "year": 2022,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen75800x3d",
+    "amdryzen75800x3d",
+    "coreryzen75800x3d",
+    "amdryzen75800x3d"
+   ]
+  },
+  {
+   "name": "Ryzen 9 5900X",
+   "fullName": "AMD Ryzen 9 5900X",
+   "vendor": "AMD",
+   "score": 38889,
+   "singleThread": 3465,
+   "cores": 12,
+   "threads": 24,
+   "tdp": 105,
+   "formFactor": "desktop",
+   "generation": "Ryzen 5000 (Zen 3)",
+   "win11": true,
+   "year": 2020,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen95900x",
+    "amdryzen95900x",
+    "coreryzen95900x",
+    "amdryzen95900x"
+   ]
+  },
+  {
+   "name": "Ryzen 9 5950X",
+   "fullName": "AMD Ryzen 9 5950X",
+   "vendor": "AMD",
+   "score": 45261,
+   "singleThread": 3476,
+   "cores": 16,
+   "threads": 32,
+   "tdp": 105,
+   "formFactor": "desktop",
+   "generation": "Ryzen 5000 (Zen 3)",
+   "win11": true,
+   "year": 2020,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen95950x",
+    "amdryzen95950x",
+    "coreryzen95950x",
+    "amdryzen95950x"
+   ]
+  },
+  {
+   "name": "Ryzen 5 7600",
+   "fullName": "AMD Ryzen 5 7600",
+   "vendor": "AMD",
+   "score": 26970,
+   "singleThread": 3908,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 7000 (Zen 4)",
+   "win11": true,
+   "year": 2023,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen57600",
+    "amdryzen57600",
+    "coreryzen57600",
+    "amdryzen57600"
+   ]
+  },
+  {
+   "name": "Ryzen 5 7600X",
+   "fullName": "AMD Ryzen 5 7600X",
+   "vendor": "AMD",
+   "score": 28271,
+   "singleThread": 4129,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 105,
+   "formFactor": "desktop",
+   "generation": "Ryzen 7000 (Zen 4)",
+   "win11": true,
+   "year": 2022,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen57600x",
+    "amdryzen57600x",
+    "coreryzen57600x",
+    "amdryzen57600x"
+   ]
+  },
+  {
+   "name": "Ryzen 7 7700X",
+   "fullName": "AMD Ryzen 7 7700X",
+   "vendor": "AMD",
+   "score": 35489,
+   "singleThread": 4176,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 105,
+   "formFactor": "desktop",
+   "generation": "Ryzen 7000 (Zen 4)",
+   "win11": true,
+   "year": 2022,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen77700x",
+    "amdryzen77700x",
+    "coreryzen77700x",
+    "amdryzen77700x"
+   ]
+  },
+  {
+   "name": "Ryzen 7 7800X3D",
+   "fullName": "AMD Ryzen 7 7800X3D",
+   "vendor": "AMD",
+   "score": 34276,
+   "singleThread": 3759,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 120,
+   "formFactor": "desktop",
+   "generation": "Ryzen 7000 (Zen 4 V-Cache)",
+   "win11": true,
+   "year": 2023,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen77800x3d",
+    "amdryzen77800x3d",
+    "coreryzen77800x3d",
+    "amdryzen77800x3d"
+   ]
+  },
+  {
+   "name": "Ryzen 9 7950X",
+   "fullName": "AMD Ryzen 9 7950X",
+   "vendor": "AMD",
+   "score": 62139,
+   "singleThread": 4252,
+   "cores": 16,
+   "threads": 32,
+   "tdp": 170,
+   "formFactor": "desktop",
+   "generation": "Ryzen 7000 (Zen 4)",
+   "win11": true,
+   "year": 2022,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen97950x",
+    "amdryzen97950x",
+    "coreryzen97950x",
+    "amdryzen97950x"
+   ]
+  },
+  {
+   "name": "Ryzen 5 8500G",
+   "fullName": "AMD Ryzen 5 8500G",
+   "vendor": "AMD",
+   "score": 21383,
+   "singleThread": 3876,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 8000G (Zen 4 APU)",
+   "win11": true,
+   "year": 2024,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen58500g",
+    "amdryzen58500g",
+    "coreryzen58500g",
+    "amdryzen58500g"
+   ]
+  },
+  {
+   "name": "Ryzen 5 8600G",
+   "fullName": "AMD Ryzen 5 8600G",
+   "vendor": "AMD",
+   "score": 25188,
+   "singleThread": 3875,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 8000G (Zen 4 APU)",
+   "win11": true,
+   "year": 2024,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen58600g",
+    "amdryzen58600g",
+    "coreryzen58600g",
+    "amdryzen58600g"
+   ]
+  },
+  {
+   "name": "Ryzen 7 8700G",
+   "fullName": "AMD Ryzen 7 8700G",
+   "vendor": "AMD",
+   "score": 31478,
+   "singleThread": 3920,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 8000G (Zen 4 APU)",
+   "win11": true,
+   "year": 2024,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen78700g",
+    "amdryzen78700g",
+    "coreryzen78700g",
+    "amdryzen78700g"
+   ]
+  },
+  {
+   "name": "Ryzen 5 9600X",
+   "fullName": "AMD Ryzen 5 9600X",
+   "vendor": "AMD",
+   "score": 30081,
+   "singleThread": 4571,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 9000 (Zen 5)",
+   "win11": true,
+   "year": 2024,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen59600x",
+    "amdryzen59600x",
+    "coreryzen59600x",
+    "amdryzen59600x"
+   ]
+  },
+  {
+   "name": "Ryzen 7 9700X",
+   "fullName": "AMD Ryzen 7 9700X",
+   "vendor": "AMD",
+   "score": 36956,
+   "singleThread": 4643,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 65,
+   "formFactor": "desktop",
+   "generation": "Ryzen 9000 (Zen 5)",
+   "win11": true,
+   "year": 2024,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen79700x",
+    "amdryzen79700x",
+    "coreryzen79700x",
+    "amdryzen79700x"
+   ]
+  },
+  {
+   "name": "Ryzen 7 9800X3D",
+   "fullName": "AMD Ryzen 7 9800X3D",
+   "vendor": "AMD",
+   "score": 39929,
+   "singleThread": 4421,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 120,
+   "formFactor": "desktop",
+   "generation": "Ryzen 9000 (Zen 5 V-Cache)",
+   "win11": true,
+   "year": 2024,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen79800x3d",
+    "amdryzen79800x3d",
+    "coreryzen79800x3d",
+    "amdryzen79800x3d"
+   ]
+  },
+  {
+   "name": "Ryzen 9 9950X",
+   "fullName": "AMD Ryzen 9 9950X",
+   "vendor": "AMD",
+   "score": 65714,
+   "singleThread": 4728,
+   "cores": 16,
+   "threads": 32,
+   "tdp": 170,
+   "formFactor": "desktop",
+   "generation": "Ryzen 9000 (Zen 5)",
+   "win11": true,
+   "year": 2024,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen99950x",
+    "amdryzen99950x",
+    "coreryzen99950x",
+    "amdryzen99950x"
+   ]
+  },
+  {
+   "name": "Ryzen 5 3500U",
+   "fullName": "AMD Ryzen 5 3500U",
+   "vendor": "AMD",
+   "score": 6779,
+   "singleThread": 1902,
+   "cores": 4,
+   "threads": 8,
+   "tdp": 15,
+   "formFactor": "laptop",
+   "generation": "Ryzen 3000U (Picasso)",
+   "win11": true,
+   "year": 2019,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen53500u",
+    "amdryzen53500u",
+    "coreryzen53500u",
+    "amdryzen53500u"
+   ]
+  },
+  {
+   "name": "Ryzen 5 4500U",
+   "fullName": "AMD Ryzen 5 4500U",
+   "vendor": "AMD",
+   "score": 10637,
+   "singleThread": 2398,
+   "cores": 6,
+   "threads": 6,
+   "tdp": 15,
+   "formFactor": "laptop",
+   "generation": "Ryzen 4000U (Renoir)",
+   "win11": true,
+   "year": 2020,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen54500u",
+    "amdryzen54500u",
+    "coreryzen54500u",
+    "amdryzen54500u"
+   ]
+  },
+  {
+   "name": "Ryzen 7 4700U",
+   "fullName": "AMD Ryzen 7 4700U",
+   "vendor": "AMD",
+   "score": 13112,
+   "singleThread": 2490,
+   "cores": 8,
+   "threads": 8,
+   "tdp": 15,
+   "formFactor": "laptop",
+   "generation": "Ryzen 4000U (Renoir)",
+   "win11": true,
+   "year": 2020,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen74700u",
+    "amdryzen74700u",
+    "coreryzen74700u",
+    "amdryzen74700u"
+   ]
+  },
+  {
+   "name": "Ryzen 5 5500U",
+   "fullName": "AMD Ryzen 5 5500U",
+   "vendor": "AMD",
+   "score": 12610,
+   "singleThread": 2390,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 15,
+   "formFactor": "laptop",
+   "generation": "Ryzen 5000U (Lucienne)",
+   "win11": true,
+   "year": 2021,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen55500u",
+    "amdryzen55500u",
+    "coreryzen55500u",
+    "amdryzen55500u"
+   ]
+  },
+  {
+   "name": "Ryzen 5 5600H",
+   "fullName": "AMD Ryzen 5 5600H",
+   "vendor": "AMD",
+   "score": 16362,
+   "singleThread": 2872,
+   "cores": 6,
+   "threads": 12,
+   "tdp": 45,
+   "formFactor": "laptop",
+   "generation": "Ryzen 5000H (Cezanne)",
+   "win11": true,
+   "year": 2021,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen55600h",
+    "amdryzen55600h",
+    "coreryzen55600h",
+    "amdryzen55600h"
+   ]
+  },
+  {
+   "name": "Ryzen 7 5700U",
+   "fullName": "AMD Ryzen 7 5700U",
+   "vendor": "AMD",
+   "score": 15368,
+   "singleThread": 2531,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 15,
+   "formFactor": "laptop",
+   "generation": "Ryzen 5000U (Lucienne)",
+   "win11": true,
+   "year": 2021,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen75700u",
+    "amdryzen75700u",
+    "coreryzen75700u",
+    "amdryzen75700u"
+   ]
+  },
+  {
+   "name": "Ryzen 7 5800H",
+   "fullName": "AMD Ryzen 7 5800H",
+   "vendor": "AMD",
+   "score": 20478,
+   "singleThread": 2989,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 45,
+   "formFactor": "laptop",
+   "generation": "Ryzen 5000H (Cezanne)",
+   "win11": true,
+   "year": 2021,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen75800h",
+    "amdryzen75800h",
+    "coreryzen75800h",
+    "amdryzen75800h"
+   ]
+  },
+  {
+   "name": "Ryzen 7 6800U",
+   "fullName": "AMD Ryzen 7 6800U",
+   "vendor": "AMD",
+   "score": 20732,
+   "singleThread": 3202,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 28,
+   "formFactor": "laptop",
+   "generation": "Ryzen 6000U (Rembrandt)",
+   "win11": true,
+   "year": 2022,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen76800u",
+    "amdryzen76800u",
+    "coreryzen76800u",
+    "amdryzen76800u"
+   ]
+  },
+  {
+   "name": "Ryzen 7 7735U",
+   "fullName": "AMD Ryzen 7 7735U",
+   "vendor": "AMD",
+   "score": 20191,
+   "singleThread": 3169,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 28,
+   "formFactor": "laptop",
+   "generation": "Ryzen 7000U (Rembrandt R)",
+   "win11": true,
+   "year": 2023,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen77735u",
+    "amdryzen77735u",
+    "coreryzen77735u",
+    "amdryzen77735u"
+   ]
+  },
+  {
+   "name": "Ryzen 7 7840U",
+   "fullName": "AMD Ryzen 7 7840U",
+   "vendor": "AMD",
+   "score": 24383,
+   "singleThread": 3537,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 30,
+   "formFactor": "laptop",
+   "generation": "Ryzen 7040U (Phoenix)",
+   "win11": true,
+   "year": 2023,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen77840u",
+    "amdryzen77840u",
+    "coreryzen77840u",
+    "amdryzen77840u"
+   ]
+  },
+  {
+   "name": "Ryzen 7 8845HS",
+   "fullName": "AMD Ryzen 7 8845HS",
+   "vendor": "AMD",
+   "score": 28290,
+   "singleThread": 3721,
+   "cores": 8,
+   "threads": 16,
+   "tdp": 45,
+   "formFactor": "laptop",
+   "generation": "Ryzen 8040HS (Hawk Point)",
+   "win11": true,
+   "year": 2024,
+   "source": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "aliases": [
+    "ryzen78845hs",
+    "amdryzen78845hs",
+    "coreryzen78845hs",
+    "amdryzen78845hs"
+   ]
+  }
+ ],
+ "gpus": [
+  {
+   "name": "GeForce GTX 950",
+   "fullName": "GeForce GTX 950",
+   "vendor": "NVIDIA",
+   "score": 5354,
+   "vram": 2,
+   "tdp": 90,
+   "integrated": false,
+   "year": 2015,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcegtx950",
+    "geforcegtx950",
+    "nvidiageforcegtx950"
+   ]
+  },
+  {
+   "name": "GeForce GTX 960",
+   "fullName": "GeForce GTX 960",
+   "vendor": "NVIDIA",
+   "score": 6148,
+   "vram": 4,
+   "tdp": 120,
+   "integrated": false,
+   "year": 2015,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcegtx960",
+    "geforcegtx960",
+    "nvidiageforcegtx960"
+   ]
+  },
+  {
+   "name": "GeForce GTX 970",
+   "fullName": "GeForce GTX 970",
+   "vendor": "NVIDIA",
+   "score": 9636,
+   "vram": 4,
+   "tdp": 145,
+   "integrated": false,
+   "year": 2014,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcegtx970",
+    "geforcegtx970",
+    "nvidiageforcegtx970"
+   ]
+  },
+  {
+   "name": "GeForce GTX 980",
+   "fullName": "GeForce GTX 980",
+   "vendor": "NVIDIA",
+   "score": 11074,
+   "vram": 4,
+   "tdp": 165,
+   "integrated": false,
+   "year": 2014,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcegtx980",
+    "geforcegtx980",
+    "nvidiageforcegtx980"
+   ]
+  },
+  {
+   "name": "GeForce GTX 1050",
+   "fullName": "GeForce GTX 1050",
+   "vendor": "NVIDIA",
+   "score": 5051,
+   "vram": 2,
+   "tdp": 75,
+   "integrated": false,
+   "year": 2016,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcegtx1050",
+    "geforcegtx1050",
+    "nvidiageforcegtx1050"
+   ]
+  },
+  {
+   "name": "GeForce GTX 1050 Ti",
+   "fullName": "GeForce GTX 1050 Ti",
+   "vendor": "NVIDIA",
+   "score": 6365,
+   "vram": 4,
+   "tdp": 75,
+   "integrated": false,
+   "year": 2016,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcegtx1050ti",
+    "geforcegtx1050ti",
+    "nvidiageforcegtx1050ti"
+   ]
+  },
+  {
+   "name": "GeForce GTX 1060 3GB",
+   "fullName": "GeForce GTX 1060 3GB",
+   "vendor": "NVIDIA",
+   "score": 9850,
+   "vram": 3,
+   "tdp": 120,
+   "integrated": false,
+   "year": 2016,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcegtx10603gb",
+    "geforcegtx10603gb",
+    "nvidiageforcegtx10603gb"
+   ]
+  },
+  {
+   "name": "GeForce GTX 1060",
+   "fullName": "GeForce GTX 1060",
+   "vendor": "NVIDIA",
+   "score": 10026,
+   "vram": 6,
+   "tdp": 120,
+   "integrated": false,
+   "year": 2016,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcegtx1060",
+    "geforcegtx1060",
+    "nvidiageforcegtx1060"
+   ]
+  },
+  {
+   "name": "GeForce GTX 1070",
+   "fullName": "GeForce GTX 1070",
+   "vendor": "NVIDIA",
+   "score": 13511,
+   "vram": 8,
+   "tdp": 150,
+   "integrated": false,
+   "year": 2016,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcegtx1070",
+    "geforcegtx1070",
+    "nvidiageforcegtx1070"
+   ]
+  },
+  {
+   "name": "GeForce GTX 1080",
+   "fullName": "GeForce GTX 1080",
+   "vendor": "NVIDIA",
+   "score": 15610,
+   "vram": 8,
+   "tdp": 180,
+   "integrated": false,
+   "year": 2016,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcegtx1080",
+    "geforcegtx1080",
+    "nvidiageforcegtx1080"
+   ]
+  },
+  {
+   "name": "GeForce GTX 1080 Ti",
+   "fullName": "GeForce GTX 1080 Ti",
+   "vendor": "NVIDIA",
+   "score": 18595,
+   "vram": 11,
+   "tdp": 250,
+   "integrated": false,
+   "year": 2017,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcegtx1080ti",
+    "geforcegtx1080ti",
+    "nvidiageforcegtx1080ti"
+   ]
+  },
+  {
+   "name": "GeForce GTX 1650",
+   "fullName": "GeForce GTX 1650",
+   "vendor": "NVIDIA",
+   "score": 7868,
+   "vram": 4,
+   "tdp": 75,
+   "integrated": false,
+   "year": 2019,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcegtx1650",
+    "geforcegtx1650",
+    "nvidiageforcegtx1650"
+   ]
+  },
+  {
+   "name": "GeForce GTX 1650 SUPER",
+   "fullName": "GeForce GTX 1650 SUPER",
+   "vendor": "NVIDIA",
+   "score": 10196,
+   "vram": 4,
+   "tdp": 100,
+   "integrated": false,
+   "year": 2019,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcegtx1650super",
+    "geforcegtx1650super",
+    "nvidiageforcegtx1650super"
+   ]
+  },
+  {
+   "name": "GeForce GTX 1660",
+   "fullName": "GeForce GTX 1660",
+   "vendor": "NVIDIA",
+   "score": 11610,
+   "vram": 6,
+   "tdp": 120,
+   "integrated": false,
+   "year": 2019,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcegtx1660",
+    "geforcegtx1660",
+    "nvidiageforcegtx1660"
+   ]
+  },
+  {
+   "name": "GeForce GTX 1660 SUPER",
+   "fullName": "GeForce GTX 1660 SUPER",
+   "vendor": "NVIDIA",
+   "score": 12662,
+   "vram": 6,
+   "tdp": 125,
+   "integrated": false,
+   "year": 2019,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcegtx1660super",
+    "geforcegtx1660super",
+    "nvidiageforcegtx1660super"
+   ]
+  },
+  {
+   "name": "GeForce GTX 1660 Ti",
+   "fullName": "GeForce GTX 1660 Ti",
+   "vendor": "NVIDIA",
+   "score": 12581,
+   "vram": 6,
+   "tdp": 120,
+   "integrated": false,
+   "year": 2019,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcegtx1660ti",
+    "geforcegtx1660ti",
+    "nvidiageforcegtx1660ti"
+   ]
+  },
+  {
+   "name": "GeForce RTX 2060",
+   "fullName": "GeForce RTX 2060",
+   "vendor": "NVIDIA",
+   "score": 14079,
+   "vram": 6,
+   "tdp": 160,
+   "integrated": false,
+   "year": 2019,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx2060",
+    "geforcertx2060",
+    "nvidiageforcertx2060"
+   ]
+  },
+  {
+   "name": "GeForce RTX 2060 SUPER",
+   "fullName": "GeForce RTX 2060 SUPER",
+   "vendor": "NVIDIA",
+   "score": 16465,
+   "vram": 8,
+   "tdp": 175,
+   "integrated": false,
+   "year": 2019,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx2060super",
+    "geforcertx2060super",
+    "nvidiageforcertx2060super"
+   ]
+  },
+  {
+   "name": "GeForce RTX 2070",
+   "fullName": "GeForce RTX 2070",
+   "vendor": "NVIDIA",
+   "score": 16057,
+   "vram": 8,
+   "tdp": 175,
+   "integrated": false,
+   "year": 2018,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx2070",
+    "geforcertx2070",
+    "nvidiageforcertx2070"
+   ]
+  },
+  {
+   "name": "GeForce RTX 2070 SUPER",
+   "fullName": "GeForce RTX 2070 SUPER",
+   "vendor": "NVIDIA",
+   "score": 18123,
+   "vram": 8,
+   "tdp": 215,
+   "integrated": false,
+   "year": 2019,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx2070super",
+    "geforcertx2070super",
+    "nvidiageforcertx2070super"
+   ]
+  },
+  {
+   "name": "GeForce RTX 2080",
+   "fullName": "GeForce RTX 2080",
+   "vendor": "NVIDIA",
+   "score": 18571,
+   "vram": 7.9,
+   "tdp": 250,
+   "integrated": false,
+   "year": 2018,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx2080",
+    "geforcertx2080",
+    "nvidiageforcertx2080"
+   ]
+  },
+  {
+   "name": "GeForce RTX 2080 Ti",
+   "fullName": "GeForce RTX 2080 Ti",
+   "vendor": "NVIDIA",
+   "score": 21417,
+   "vram": 11,
+   "tdp": 250,
+   "integrated": false,
+   "year": 2018,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx2080ti",
+    "geforcertx2080ti",
+    "nvidiageforcertx2080ti"
+   ]
+  },
+  {
+   "name": "GeForce RTX 3050",
+   "fullName": "GeForce RTX 3050 8GB",
+   "vendor": "NVIDIA",
+   "score": 12471,
+   "vram": 8,
+   "tdp": 130,
+   "integrated": false,
+   "year": 2022,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx3050",
+    "geforcertx30508gb",
+    "nvidiageforcertx3050"
+   ]
+  },
+  {
+   "name": "GeForce RTX 3060",
+   "fullName": "GeForce RTX 3060",
+   "vendor": "NVIDIA",
+   "score": 16891,
+   "vram": null,
+   "tdp": null,
+   "integrated": false,
+   "year": 2021,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx3060",
+    "geforcertx3060",
+    "nvidiageforcertx3060"
+   ]
+  },
+  {
+   "name": "GeForce RTX 3060 Ti",
+   "fullName": "GeForce RTX 3060 Ti",
+   "vendor": "NVIDIA",
+   "score": 20230,
+   "vram": 8,
+   "tdp": 200,
+   "integrated": false,
+   "year": 2020,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx3060ti",
+    "geforcertx3060ti",
+    "nvidiageforcertx3060ti"
+   ]
+  },
+  {
+   "name": "GeForce RTX 3070",
+   "fullName": "GeForce RTX 3070",
+   "vendor": "NVIDIA",
+   "score": 22080,
+   "vram": 8,
+   "tdp": 220,
+   "integrated": false,
+   "year": 2020,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx3070",
+    "geforcertx3070",
+    "nvidiageforcertx3070"
+   ]
+  },
+  {
+   "name": "GeForce RTX 3080",
+   "fullName": "GeForce RTX 3080",
+   "vendor": "NVIDIA",
+   "score": 24988,
+   "vram": 10,
+   "tdp": 320,
+   "integrated": false,
+   "year": 2020,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx3080",
+    "geforcertx3080",
+    "nvidiageforcertx3080"
+   ]
+  },
+  {
+   "name": "GeForce RTX 3090",
+   "fullName": "GeForce RTX 3090",
+   "vendor": "NVIDIA",
+   "score": 26494,
+   "vram": 24,
+   "tdp": 350,
+   "integrated": false,
+   "year": 2020,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx3090",
+    "geforcertx3090",
+    "nvidiageforcertx3090"
+   ]
+  },
+  {
+   "name": "GeForce RTX 4060",
+   "fullName": "GeForce RTX 4060",
+   "vendor": "NVIDIA",
+   "score": 19489,
+   "vram": 8,
+   "tdp": 115,
+   "integrated": false,
+   "year": 2023,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx4060",
+    "geforcertx4060",
+    "nvidiageforcertx4060"
+   ]
+  },
+  {
+   "name": "GeForce RTX 4060 Ti",
+   "fullName": "GeForce RTX 4060 Ti",
+   "vendor": "NVIDIA",
+   "score": 22599,
+   "vram": 8,
+   "tdp": 160,
+   "integrated": false,
+   "year": 2023,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx4060ti",
+    "geforcertx4060ti",
+    "nvidiageforcertx4060ti"
+   ]
+  },
+  {
+   "name": "GeForce RTX 4070",
+   "fullName": "GeForce RTX 4070",
+   "vendor": "NVIDIA",
+   "score": 26871,
+   "vram": 12,
+   "tdp": 200,
+   "integrated": false,
+   "year": 2023,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx4070",
+    "geforcertx4070",
+    "nvidiageforcertx4070"
+   ]
+  },
+  {
+   "name": "GeForce RTX 4070 SUPER",
+   "fullName": "GeForce RTX 4070 SUPER",
+   "vendor": "NVIDIA",
+   "score": 29948,
+   "vram": 12,
+   "tdp": 220,
+   "integrated": false,
+   "year": 2024,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx4070super",
+    "geforcertx4070super",
+    "nvidiageforcertx4070super"
+   ]
+  },
+  {
+   "name": "GeForce RTX 4070 Ti",
+   "fullName": "GeForce RTX 4070 Ti",
+   "vendor": "NVIDIA",
+   "score": 31538,
+   "vram": 12,
+   "tdp": 285,
+   "integrated": false,
+   "year": 2023,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx4070ti",
+    "geforcertx4070ti",
+    "nvidiageforcertx4070ti"
+   ]
+  },
+  {
+   "name": "GeForce RTX 4080",
+   "fullName": "GeForce RTX 4080",
+   "vendor": "NVIDIA",
+   "score": 34430,
+   "vram": 16,
+   "tdp": 320,
+   "integrated": false,
+   "year": 2022,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx4080",
+    "geforcertx4080",
+    "nvidiageforcertx4080"
+   ]
+  },
+  {
+   "name": "GeForce RTX 4090",
+   "fullName": "GeForce RTX 4090",
+   "vendor": "NVIDIA",
+   "score": 38041,
+   "vram": 24,
+   "tdp": 450,
+   "integrated": false,
+   "year": 2022,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx4090",
+    "geforcertx4090",
+    "nvidiageforcertx4090"
+   ]
+  },
+  {
+   "name": "GeForce RTX 5060",
+   "fullName": "GeForce RTX 5060",
+   "vendor": "NVIDIA",
+   "score": 20638,
+   "vram": 8,
+   "tdp": 170,
+   "integrated": false,
+   "year": 2025,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx5060",
+    "geforcertx5060",
+    "nvidiageforcertx5060"
+   ]
+  },
+  {
+   "name": "GeForce RTX 5060 Ti",
+   "fullName": "GeForce RTX 5060 Ti 8GB",
+   "vendor": "NVIDIA",
+   "score": 21945,
+   "vram": 8,
+   "tdp": 180,
+   "integrated": false,
+   "year": 2025,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx5060ti",
+    "geforcertx5060ti8gb",
+    "nvidiageforcertx5060ti"
+   ]
+  },
+  {
+   "name": "GeForce RTX 5070",
+   "fullName": "GeForce RTX 5070",
+   "vendor": "NVIDIA",
+   "score": 28662,
+   "vram": 12,
+   "tdp": 250,
+   "integrated": false,
+   "year": 2025,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx5070",
+    "geforcertx5070",
+    "nvidiageforcertx5070"
+   ]
+  },
+  {
+   "name": "GeForce RTX 5070 Ti",
+   "fullName": "GeForce RTX 5070 Ti",
+   "vendor": "NVIDIA",
+   "score": 32340,
+   "vram": 16,
+   "tdp": 300,
+   "integrated": false,
+   "year": 2025,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx5070ti",
+    "geforcertx5070ti",
+    "nvidiageforcertx5070ti"
+   ]
+  },
+  {
+   "name": "GeForce RTX 5080",
+   "fullName": "GeForce RTX 5080",
+   "vendor": "NVIDIA",
+   "score": 35621,
+   "vram": 16,
+   "tdp": 360,
+   "integrated": false,
+   "year": 2025,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx5080",
+    "geforcertx5080",
+    "nvidiageforcertx5080"
+   ]
+  },
+  {
+   "name": "GeForce RTX 5090",
+   "fullName": "GeForce RTX 5090",
+   "vendor": "NVIDIA",
+   "score": 38988,
+   "vram": 32,
+   "tdp": 575,
+   "integrated": false,
+   "year": 2025,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "geforcertx5090",
+    "geforcertx5090",
+    "nvidiageforcertx5090"
+   ]
+  },
+  {
+   "name": "Radeon RX 460",
+   "fullName": "Radeon RX 460",
+   "vendor": "AMD",
+   "score": 4096,
+   "vram": 4,
+   "tdp": 75,
+   "integrated": false,
+   "year": 2016,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx460",
+    "radeonrx460",
+    "amdradeonrx460"
+   ]
+  },
+  {
+   "name": "Radeon RX 470",
+   "fullName": "Radeon RX 470/570",
+   "vendor": "AMD",
+   "score": 7910,
+   "vram": 8,
+   "tdp": 120,
+   "integrated": false,
+   "year": 2016,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx470",
+    "radeonrx470570",
+    "amdradeonrx470"
+   ]
+  },
+  {
+   "name": "Radeon RX 480",
+   "fullName": "Radeon RX 480",
+   "vendor": "AMD",
+   "score": 8526,
+   "vram": 8,
+   "tdp": 150,
+   "integrated": false,
+   "year": 2016,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx480",
+    "radeonrx480",
+    "amdradeonrx480"
+   ]
+  },
+  {
+   "name": "Radeon RX 550",
+   "fullName": "Radeon RX 550",
+   "vendor": "AMD",
+   "score": 2703,
+   "vram": 4,
+   "tdp": 50,
+   "integrated": false,
+   "year": 2017,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx550",
+    "radeonrx550",
+    "amdradeonrx550"
+   ]
+  },
+  {
+   "name": "Radeon RX 560",
+   "fullName": "Radeon RX 560",
+   "vendor": "AMD",
+   "score": 3684,
+   "vram": 4,
+   "tdp": 80,
+   "integrated": false,
+   "year": 2017,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx560",
+    "radeonrx560",
+    "amdradeonrx560"
+   ]
+  },
+  {
+   "name": "Radeon RX 580",
+   "fullName": "Radeon RX 580",
+   "vendor": "AMD",
+   "score": 8784,
+   "vram": 8,
+   "tdp": 185,
+   "integrated": false,
+   "year": 2017,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx580",
+    "radeonrx580",
+    "amdradeonrx580"
+   ]
+  },
+  {
+   "name": "Radeon RX 590",
+   "fullName": "Radeon RX 590",
+   "vendor": "AMD",
+   "score": 9279,
+   "vram": 8,
+   "tdp": 175,
+   "integrated": false,
+   "year": 2018,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx590",
+    "radeonrx590",
+    "amdradeonrx590"
+   ]
+  },
+  {
+   "name": "Radeon RX 5500 XT",
+   "fullName": "Radeon RX 5500 XT",
+   "vendor": "AMD",
+   "score": 9054,
+   "vram": 8,
+   "tdp": 130,
+   "integrated": false,
+   "year": 2019,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx5500xt",
+    "radeonrx5500xt",
+    "amdradeonrx5500xt"
+   ]
+  },
+  {
+   "name": "Radeon RX 5600 XT",
+   "fullName": "Radeon RX 5600 XT",
+   "vendor": "AMD",
+   "score": 13377,
+   "vram": 6,
+   "tdp": 150,
+   "integrated": false,
+   "year": 2020,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx5600xt",
+    "radeonrx5600xt",
+    "amdradeonrx5600xt"
+   ]
+  },
+  {
+   "name": "Radeon RX 5700 XT",
+   "fullName": "Radeon RX 5700 XT",
+   "vendor": "AMD",
+   "score": 16046,
+   "vram": 8,
+   "tdp": 225,
+   "integrated": false,
+   "year": 2019,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx5700xt",
+    "radeonrx5700xt",
+    "amdradeonrx5700xt"
+   ]
+  },
+  {
+   "name": "Radeon RX 6400",
+   "fullName": "Radeon RX 6400",
+   "vendor": "AMD",
+   "score": 7747,
+   "vram": 4,
+   "tdp": 53,
+   "integrated": false,
+   "year": 2022,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx6400",
+    "radeonrx6400",
+    "amdradeonrx6400"
+   ]
+  },
+  {
+   "name": "Radeon RX 6500 XT",
+   "fullName": "Radeon RX 6500 XT",
+   "vendor": "AMD",
+   "score": 9623,
+   "vram": 4,
+   "tdp": 107,
+   "integrated": false,
+   "year": 2022,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx6500xt",
+    "radeonrx6500xt",
+    "amdradeonrx6500xt"
+   ]
+  },
+  {
+   "name": "Radeon RX 6600",
+   "fullName": "Radeon RX 6600",
+   "vendor": "AMD",
+   "score": 15051,
+   "vram": 8,
+   "tdp": 132,
+   "integrated": false,
+   "year": 2021,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx6600",
+    "radeonrx6600",
+    "amdradeonrx6600"
+   ]
+  },
+  {
+   "name": "Radeon RX 6600 XT",
+   "fullName": "Radeon RX 6600 XT",
+   "vendor": "AMD",
+   "score": 16438,
+   "vram": 8,
+   "tdp": 160,
+   "integrated": false,
+   "year": 2021,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx6600xt",
+    "radeonrx6600xt",
+    "amdradeonrx6600xt"
+   ]
+  },
+  {
+   "name": "Radeon RX 6700 XT",
+   "fullName": "Radeon RX 6700 XT",
+   "vendor": "AMD",
+   "score": 19729,
+   "vram": 12,
+   "tdp": 230,
+   "integrated": false,
+   "year": 2021,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx6700xt",
+    "radeonrx6700xt",
+    "amdradeonrx6700xt"
+   ]
+  },
+  {
+   "name": "Radeon RX 6800 XT",
+   "fullName": "Radeon RX 6800 XT",
+   "vendor": "AMD",
+   "score": 25074,
+   "vram": 16,
+   "tdp": 300,
+   "integrated": false,
+   "year": 2020,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx6800xt",
+    "radeonrx6800xt",
+    "amdradeonrx6800xt"
+   ]
+  },
+  {
+   "name": "Radeon RX 6900 XT",
+   "fullName": "Radeon RX 6900 XT",
+   "vendor": "AMD",
+   "score": 26643,
+   "vram": 16,
+   "tdp": 300,
+   "integrated": false,
+   "year": 2020,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx6900xt",
+    "radeonrx6900xt",
+    "amdradeonrx6900xt"
+   ]
+  },
+  {
+   "name": "Radeon RX 7600",
+   "fullName": "Radeon RX 7600",
+   "vendor": "AMD",
+   "score": 16445,
+   "vram": 8,
+   "tdp": 165,
+   "integrated": false,
+   "year": 2023,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx7600",
+    "radeonrx7600",
+    "amdradeonrx7600"
+   ]
+  },
+  {
+   "name": "Radeon RX 7700 XT",
+   "fullName": "Radeon RX 7700 XT",
+   "vendor": "AMD",
+   "score": 22758,
+   "vram": 12,
+   "tdp": 245,
+   "integrated": false,
+   "year": 2023,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx7700xt",
+    "radeonrx7700xt",
+    "amdradeonrx7700xt"
+   ]
+  },
+  {
+   "name": "Radeon RX 7800 XT",
+   "fullName": "Radeon RX 7800 XT",
+   "vendor": "AMD",
+   "score": 24449,
+   "vram": 16,
+   "tdp": 263,
+   "integrated": false,
+   "year": 2023,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx7800xt",
+    "radeonrx7800xt",
+    "amdradeonrx7800xt"
+   ]
+  },
+  {
+   "name": "Radeon RX 7900 XTX",
+   "fullName": "Radeon RX 7900 XTX",
+   "vendor": "AMD",
+   "score": 31451,
+   "vram": 24,
+   "tdp": 355,
+   "integrated": false,
+   "year": 2022,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx7900xtx",
+    "radeonrx7900xtx",
+    "amdradeonrx7900xtx"
+   ]
+  },
+  {
+   "name": "Radeon RX 9070 XT",
+   "fullName": "Radeon RX 9070 XT",
+   "vendor": "AMD",
+   "score": 26906,
+   "vram": 16,
+   "tdp": 304,
+   "integrated": false,
+   "year": 2025,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrx9070xt",
+    "radeonrx9070xt",
+    "amdradeonrx9070xt"
+   ]
+  },
+  {
+   "name": "Arc A380",
+   "fullName": "Intel Arc A380",
+   "vendor": "Intel",
+   "score": 6320,
+   "vram": 6,
+   "tdp": 75,
+   "integrated": false,
+   "year": 2022,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "arca380",
+    "intelarca380",
+    "intelarca380"
+   ]
+  },
+  {
+   "name": "Arc A750",
+   "fullName": "Intel Arc A750",
+   "vendor": "Intel",
+   "score": 12645,
+   "vram": 8,
+   "tdp": 225,
+   "integrated": false,
+   "year": 2022,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "arca750",
+    "intelarca750",
+    "intelarca750"
+   ]
+  },
+  {
+   "name": "Arc A770",
+   "fullName": "Intel Arc A770",
+   "vendor": "Intel",
+   "score": 13352,
+   "vram": 16,
+   "tdp": 225,
+   "integrated": false,
+   "year": 2022,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "arca770",
+    "intelarca770",
+    "intelarca770"
+   ]
+  },
+  {
+   "name": "Arc B580",
+   "fullName": "Intel Arc B580",
+   "vendor": "Intel",
+   "score": 16049,
+   "vram": 12,
+   "tdp": 190,
+   "integrated": false,
+   "year": 2024,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "arcb580",
+    "intelarcb580",
+    "intelarcb580"
+   ]
+  },
+  {
+   "name": "Intel HD 4600",
+   "fullName": "Intel HD 4600",
+   "vendor": "Intel",
+   "score": 631,
+   "vram": null,
+   "tdp": 45,
+   "integrated": true,
+   "year": 2013,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "intelhd4600",
+    "intelhd4600",
+    "intelintelhd4600"
+   ]
+  },
+  {
+   "name": "Intel HD 520",
+   "fullName": "Intel HD 520",
+   "vendor": "Intel",
+   "score": 859,
+   "vram": null,
+   "tdp": null,
+   "integrated": true,
+   "year": 2015,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "intelhd520",
+    "intelhd520",
+    "intelintelhd520"
+   ]
+  },
+  {
+   "name": "Intel HD 530",
+   "fullName": "Intel HD 530",
+   "vendor": "Intel",
+   "score": 987,
+   "vram": null,
+   "tdp": null,
+   "integrated": true,
+   "year": 2015,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "intelhd530",
+    "intelhd530",
+    "intelintelhd530"
+   ]
+  },
+  {
+   "name": "Intel HD 4000",
+   "fullName": "Intel HD 4000",
+   "vendor": "Intel",
+   "score": 341,
+   "vram": null,
+   "tdp": null,
+   "integrated": true,
+   "year": 2012,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "intelhd4000",
+    "intelhd4000",
+    "intelintelhd4000"
+   ]
+  },
+  {
+   "name": "Intel UHD Graphics",
+   "fullName": "Intel UHD Graphics",
+   "vendor": "Intel",
+   "score": 1536,
+   "vram": null,
+   "tdp": null,
+   "integrated": true,
+   "year": 2020,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "inteluhdgraphics",
+    "inteluhdgraphics",
+    "intelinteluhdgraphics"
+   ]
+  },
+  {
+   "name": "Intel HD Graphics 620",
+   "fullName": "Intel HD Graphics 620",
+   "vendor": "Intel",
+   "score": 917,
+   "vram": null,
+   "tdp": null,
+   "integrated": true,
+   "year": 2016,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "intelhdgraphics620",
+    "intelhdgraphics620",
+    "intelintelhdgraphics620"
+   ]
+  },
+  {
+   "name": "Intel UHD Graphics 620",
+   "fullName": "Intel UHD Graphics 620",
+   "vendor": "Intel",
+   "score": 1039,
+   "vram": null,
+   "tdp": 15,
+   "integrated": true,
+   "year": 2017,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "inteluhdgraphics620",
+    "inteluhdgraphics620",
+    "intelinteluhdgraphics620"
+   ]
+  },
+  {
+   "name": "Intel UHD Graphics 630",
+   "fullName": "Intel UHD Graphics 630",
+   "vendor": "Intel",
+   "score": 1227,
+   "vram": null,
+   "tdp": null,
+   "integrated": true,
+   "year": 2017,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "inteluhdgraphics630",
+    "inteluhdgraphics630",
+    "intelinteluhdgraphics630"
+   ]
+  },
+  {
+   "name": "Intel UHD Graphics 730",
+   "fullName": "Intel UHD Graphics 730",
+   "vendor": "Intel",
+   "score": 1543,
+   "vram": null,
+   "tdp": null,
+   "integrated": true,
+   "year": 2021,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "inteluhdgraphics730",
+    "inteluhdgraphics730",
+    "intelinteluhdgraphics730"
+   ]
+  },
+  {
+   "name": "Intel UHD Graphics 770",
+   "fullName": "Intel UHD Graphics 770",
+   "vendor": "Intel",
+   "score": 1908,
+   "vram": null,
+   "tdp": null,
+   "integrated": true,
+   "year": 2021,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "inteluhdgraphics770",
+    "inteluhdgraphics770",
+    "intelinteluhdgraphics770"
+   ]
+  },
+  {
+   "name": "Intel Iris Xe",
+   "fullName": "Intel Iris Xe",
+   "vendor": "Intel",
+   "score": 2590,
+   "vram": null,
+   "tdp": null,
+   "integrated": true,
+   "year": 2020,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "intelirisxe",
+    "intelirisxe",
+    "intelintelirisxe"
+   ]
+  },
+  {
+   "name": "Intel Arc 140V GPU",
+   "fullName": "Intel Arc 140V GPU",
+   "vendor": "Intel",
+   "score": 5139,
+   "vram": null,
+   "tdp": null,
+   "integrated": true,
+   "year": 2024,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "intelarc140vgpu",
+    "intelarc140vgpu",
+    "intelintelarc140vgpu"
+   ]
+  },
+  {
+   "name": "Intel Arc 140T GPU",
+   "fullName": "Intel Arc 140T GPU",
+   "vendor": "Intel",
+   "score": 6605,
+   "vram": null,
+   "tdp": null,
+   "integrated": true,
+   "year": 2025,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "intelarc140tgpu",
+    "intelarc140tgpu",
+    "intelintelarc140tgpu"
+   ]
+  },
+  {
+   "name": "Radeon Vega 8",
+   "fullName": "Radeon Vega 8",
+   "vendor": "AMD",
+   "score": 1562,
+   "vram": null,
+   "tdp": null,
+   "integrated": true,
+   "year": 2018,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonvega8",
+    "radeonvega8",
+    "amdradeonvega8"
+   ]
+  },
+  {
+   "name": "Radeon Vega 11",
+   "fullName": "Radeon Vega 11",
+   "vendor": "AMD",
+   "score": 1868,
+   "vram": null,
+   "tdp": null,
+   "integrated": true,
+   "year": 2018,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonvega11",
+    "radeonvega11",
+    "amdradeonvega11"
+   ]
+  },
+  {
+   "name": "Radeon RX Vega 11",
+   "fullName": "Radeon RX Vega 11",
+   "vendor": "AMD",
+   "score": 2088,
+   "vram": null,
+   "tdp": null,
+   "integrated": true,
+   "year": 2018,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeonrxvega11",
+    "radeonrxvega11",
+    "amdradeonrxvega11"
+   ]
+  },
+  {
+   "name": "Radeon 680M",
+   "fullName": "Radeon 680M",
+   "vendor": "AMD",
+   "score": 4016,
+   "vram": null,
+   "tdp": null,
+   "integrated": true,
+   "year": 2022,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeon680m",
+    "radeon680m",
+    "amdradeon680m"
+   ]
+  },
+  {
+   "name": "Radeon 780M",
+   "fullName": "Radeon 780M",
+   "vendor": "AMD",
+   "score": 6762,
+   "vram": null,
+   "tdp": null,
+   "integrated": true,
+   "year": 2023,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeon780m",
+    "radeon780m",
+    "amdradeon780m"
+   ]
+  },
+  {
+   "name": "Radeon 880M",
+   "fullName": "Radeon 880M",
+   "vendor": "AMD",
+   "score": 7597,
+   "vram": null,
+   "tdp": null,
+   "integrated": true,
+   "year": 2024,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeon880m",
+    "radeon880m",
+    "amdradeon880m"
+   ]
+  },
+  {
+   "name": "Radeon 890M",
+   "fullName": "Radeon 890M",
+   "vendor": "AMD",
+   "score": 8082,
+   "vram": null,
+   "tdp": null,
+   "integrated": true,
+   "year": 2024,
+   "source": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "aliases": [
+    "radeon890m",
+    "radeon890m",
+    "amdradeon890m"
+   ]
+  }
+ ],
+ "prices": {
+  "storage": [
+   {
+    "type": "ssd",
+    "label": "SATA 2.5inch SSD 500GB",
+    "gb": 500,
+    "yen": 9990,
+    "basis": "low",
+    "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130585.html",
+    "note": "AGI AI238 = 9,990 (19.5 JPY/GB) lowest. typical/high 未取得."
+   },
+   {
+    "type": "nvme",
+    "label": "NVMe M.2 SSD (PCIe 3.0/4.0) 500GB",
+    "gb": 500,
+    "yen": 12980,
+    "basis": "low",
+    "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130585.html",
+    "note": "MSI SPATIUM M450 = 12,980 (26.0 JPY/GB) lowest. 500GB is the WORST cost per GB of any NVMe capacity."
+   },
+   {
+    "type": "ssd",
+    "label": "SATA 2.5inch SSD 1TB",
+    "gb": 1024,
+    "yen": 22980,
+    "basis": "typical",
+    "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130585.html",
+    "note": "low=MSI SPATIUM S270 960GB 12,980 (a 54.3% off doorbuster, NOT a standing price); typical=Crucial BX500 1TB 22,980 (+3,180 vs previous survey)"
+   },
+   {
+    "type": "nvme",
+    "label": "NVMe M.2 SSD (PCIe 3.0/4.0) 1TB",
+    "gb": 1024,
+    "yen": 24980,
+    "basis": "typical",
+    "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130585.html",
+    "note": "low=AGI AI198 20,900 (20.9 JPY/GB); typical=Sandisk SN5100 24,980 (25.0 JPY/GB, 6,000-7,000MB/s class)"
+   },
+   {
+    "type": "ssd",
+    "label": "SATA 2.5inch SSD 2TB",
+    "gb": 2048,
+    "yen": 34480,
+    "basis": "typical",
+    "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130585.html",
+    "note": "Crucial BX500 2TB = 34,480 (17.2 JPY/GB). Reference: 4TB BX500=59,800 (15.0 JPY/GB)"
+   },
+   {
+    "type": "nvme",
+    "label": "NVMe M.2 SSD (PCIe 4.0) 2TB",
+    "gb": 2048,
+    "yen": 41800,
+    "basis": "typical",
+    "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130585.html",
+    "note": "low=CFD CSSD-M2O2TP4R7260A00 34,980 (17.5 JPY/GB, best NVMe cost per GB); Crucial P310 no-heatsink 2TB=41,800 (-13,000); Apacer AS2280P4X 2TB=48,400; KIOXIA EXCERIA BASIC 2TB=49,980 (-4,820). Reference PCIe5.0 2TB ADATA MARS 980 BLADE=57,800"
+   }
+  ],
+  "memory": [
+   {
+    "label": "DDR4 SO-DIMM (laptop) 8GB single",
+    "gb": 8,
+    "yen": 4980,
+    "basis": "low",
+    "source": "https://kakaku.com/pc/pc-memory/itemlist.aspx?pdf_Spec102=2",
+    "note": "LOW CONFIDENCE - Samsung M471A1K43CB1-CRC (PC4-19200) at 4,980. A 2018-registered part likely sold as bulk stock; inconsistent with the 2026 post-surge market. Verify before using in app logic. typical/high 未取得."
+   },
+   {
+    "label": "DDR4 DIMM (desktop) 16GB (8GB x2 kit)",
+    "gb": 16,
+    "yen": 15800,
+    "basis": "typical",
+    "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130945.html",
+    "note": "DDR4-2666 8GBx2=15,400 (flat); DDR4-3200 8GBx2=15,800 (Dospara Select, flat). high=18,980 is kakaku.com lowest (Dosparaselecta D4D3200-8G2A1-RGB-BK) https://kakaku.com/pc/pc-memory/itemlist.aspx?pdf_Spec101=6"
+   },
+   {
+    "label": "DDR4 DIMM (desktop) 32GB (16GB x2 kit)",
+    "gb": 32,
+    "yen": 30980,
+    "basis": "typical",
+    "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130945.html",
+    "note": "DDR4-2666 16GBx2=28,600 (flat); DDR4-3200 16GBx2=30,980 (Kingston, +1,000 vs previous survey = still rising). high=35,979 kakaku.com lowest (CFD W4U3200CS-16G). WARNING: DDR4 is the one type still climbing."
+   },
+   {
+    "label": "DDR4 SO-DIMM (laptop) 32GB (16GB x2 kit)",
+    "gb": 32,
+    "yen": 36300,
+    "basis": "typical",
+    "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130945.html",
+    "note": "DDR4-3200 SO-DIMM 16GBx2=36,300, +3,500 vs previous survey (rising). low=30,980 kakaku.com lowest (Dospara D4N3200-16G2A2)"
+   },
+   {
+    "label": "DDR5 DIMM (desktop) 32GB (16GB x2 kit)",
+    "gb": 32,
+    "yen": 57980,
+    "basis": "typical",
+    "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130945.html",
+    "note": "DDR5-5600 16GBx2=39,980 (G.SKILL, -20,000 vs previous = cheapest of 2026); DDR5-4800=45,980 (-8,820); DDR5-6400=57,980 (-3,820); DDR5-5600 standard=59,980 (flat). DDR5 is FALLING."
+   },
+   {
+    "label": "DDR4 DIMM (desktop) 64GB (32GB x2 kit)",
+    "gb": 64,
+    "yen": 69800,
+    "basis": "typical",
+    "source": "https://kakaku.com/pc/pc-memory/itemlist.aspx?pdf_Spec101=6",
+    "note": "Crucial CP2K32G4DFRA32A lowest price. Reference value only."
+   },
+   {
+    "label": "DDR5 DIMM (desktop) 64GB (32GB x2 kit)",
+    "gb": 64,
+    "yen": 79980,
+    "basis": "typical",
+    "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130945.html",
+    "note": "DDR5-6000 32GBx2=79,980 (Kingston, -18,000 promo); DDR5-6400 32GBx2=111,980 (flat)"
+   },
+   {
+    "label": "DDR5 SO-DIMM (laptop) 32GB (16GB x2 kit)",
+    "gb": 32,
+    "yen": 81180,
+    "basis": "typical",
+    "source": "https://akiba-pc.watch.impress.co.jp/docs/price/monthly_repo/2130945.html",
+    "note": "DDR5-5600 SO-DIMM 16GBx2=81,180 (Kingston, -660). Reference: kakaku.com Crucial CT16G56C46S5 16GBx1=36,980"
+   }
+  ],
+  "wholePc": [
+   {
+    "type": "New Windows 11 Home desktop (entry)",
+    "yen": 66500,
+    "basis": "typical",
+    "low": 62500,
+    "source": "https://kakaku.com/pc/desktop-pc/itemlist.aspx?pdf_Spec107=21",
+    "note": "PASOUL G-SLIM S2 Core i3-12100F (8GB/256GB SSD)=62,500; same w/ Ryzen 5 5600GT=66,500; PASOUL COMBAT ZONE S7 (RTX2060/16GB)=107,000; HP ProDesk 4 Tower G1i (Core Ultra 5 235/16GB/512GB)=137,900"
+   },
+   {
+    "type": "New Windows 11 Home laptop (entry)",
+    "yen": 47800,
+    "basis": "typical",
+    "low": 43956,
+    "source": "https://kakaku.com/pc/note-pc/itemlist.aspx?pdf_Spec107=21&pdf_so=p1",
+    "note": "ASUS Vivobook Go 12 E210KA (Celeron N4500/4GB/128GB eMMC)=43,956; PASOUL NC14J (Pentium Gold 6500Y/8GB/256GB SSD)=47,800; PASOUL NC15J (12GB/256GB)=51,800. The cheapest unit is 4GB/eMMC and barely usable."
+   },
+   {
+    "type": "Used Windows 11 laptop",
+    "yen": 29800,
+    "basis": "typical",
+    "low": 18800,
+    "source": "https://www.pasel.co.jp/note/all_maker/Windows11/search?rc_spt151=188",
+    "note": "Stock updated 2026-08-24. DELL Latitude 3301=29,800 (in stock); NEC VersaPro VC-7=18,800 (sold out); Lenovo ThinkPad L15 Gen1=20,790 (sold out). Live stock clusters at 29,800-45,800. Core i3 class from ~20k, Core i5 class 35,000-45,000, Core i7 class 50,000+."
+   }
+  ],
+  "usedMachineYen": 29800,
+  "usedMachineNote": "Used Windows 11 laptopの代表値",
+  "_currency": "JPY",
+  "_observed": "2026-08-24",
+  "_caveat": "AKIBA PC Hotline price figures come from a survey window of 2026-07-25 to 2026-08-01 (articles published 2026-08-05/06), i.e. roughly 3-4 weeks before the observation date. kakaku.com figures are lowest-price listings observed on 2026-08-24."
+ },
+ "sources": [
+  {
+   "id": "ms_win11_spec",
+   "url": "https://www.microsoft.com/en-us/windows/windows-11-specifications",
+   "what": "Windows 11 official minimum system requirements + Copilot+ PC requirements",
+   "fetched": "2026-08-24"
+  },
+  {
+   "id": "ms_intel_list",
+   "url": "https://learn.microsoft.com/en-us/windows-hardware/design/minimum/supported/windows-11-24h2-supported-intel-processors",
+   "what": "Official Windows 11 24H2 supported Intel processor list",
+   "fetched": "2026-08-24"
+  },
+  {
+   "id": "ms_amd_list",
+   "url": "https://learn.microsoft.com/en-us/windows-hardware/design/minimum/supported/windows-11-24h2-supported-amd-processors",
+   "what": "Official Windows 11 24H2 supported AMD processor list",
+   "fetched": "2026-08-24"
+  },
+  {
+   "id": "ms_qualcomm_list",
+   "url": "https://learn.microsoft.com/en-us/windows-hardware/design/minimum/supported/windows-11-24h2-supported-qualcomm-processors",
+   "what": "Official Windows 11 24H2 supported Qualcomm processor list",
+   "fetched": "2026-08-24"
+  },
+  {
+   "id": "ms_win10_eol",
+   "url": "https://support.microsoft.com/en-us/windows/windows-10-support-ends-on-october-14-2025-2ca8b313-1946-43d3-b55c-2b95b107f281",
+   "what": "Windows 10 end of support date",
+   "fetched": "2026-08-24"
+  },
+  {
+   "id": "ms_esu",
+   "url": "https://www.microsoft.com/en-us/windows/extended-security-updates",
+   "what": "Windows 10 consumer ESU price, enrolment options, coverage window",
+   "fetched": "2026-08-24"
+  },
+  {
+   "id": "passmark_cpu",
+   "url": "https://www.cpubenchmark.net/CPU_mega_page.html",
+   "what": "PassMark CPU Mark, single-thread mark, cores, TDP, socket. Single source for ALL CPU scores in this file.",
+   "fetched": "2026-08-24",
+   "note": "PassMark states the page was last updated 24th of August 2026."
+  },
+  {
+   "id": "passmark_gpu",
+   "url": "https://www.videocardbenchmark.net/GPU_mega_page.html",
+   "what": "PassMark G3D Mark, G2D Mark, VRAM, TDP. Single source for ALL GPU scores in this file.",
+   "fetched": "2026-08-24"
+  },
+  {
+   "id": "mbr2gpt",
+   "url": "https://learn.microsoft.com/en-us/windows/deployment/mbr-to-gpt",
+   "what": "Converting MBR to GPT so Secure Boot / UEFI can be enabled without reinstalling",
+   "fetched": null
+  }
+ ]
+}
