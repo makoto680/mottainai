@@ -68,23 +68,31 @@ gcloud run deploy mottainai --source . --region asia-northeast1 --allow-unauthen
 gcloud run services describe mottainai --region asia-northeast1
 ```
 
-## 動画の台本（目標 3分30秒・顔出しなし・画面録画のみ）
+## 動画の台本 v2（2026-08-25 実測改訂・目標 3分45秒・顔出しなし・画面録画のみ）
 
 英語字幕を焼く。話者が映る要件は無いので、画面と字幕だけで成立させる。
 
+**v2の骨子（両実演とも2026-08-25に本番APIで予行済み＝出る画は実測で確定している）：**
+- 実演①＝**録画するPC自身をライブでスクショ判定**（i5-10400F/GTX 1070 Ti/32GB/SSD 112GB）
+  → 見出し **"There is nothing to buy."** ＋ RAM=OVERKILL ＋ Storage=TIGHT ＋ Win11=¥0。
+  「買え」がひとつも出ない判定＝コンセプトの実証。実測30.1秒・unresolvedゼロ。
+- 実演②＝**古い事務機を手入力**（i5-7500/integrated/8GB/HDD・officeのみ）
+  → 見出し **"Replace exactly one thing: the Storage. ¥9,990. The machine itself stays."**
+  ＋256GB注記＋Win11非対応でも道がある。実測9.6秒（画像なしだと知覚が走らず速い）。
+  ①だけだと金額エンジンが動く画が無いので、②で「1点だけ・実勢価格・サイズは必要分」を見せる。
+
 ---
 
-**[0:00–0:25] 問題**
+**[0:00–0:20] 問題**
 
-> 画面：一般的なPC構成サイトを2〜3個、静かにスクロール
+> 画面：一般的なPC構成サイトを1〜2個、静かにスクロール
 >
 > 字幕:
 > "Every PC advisor on the internet answers the same way: buy more.
-> Pick your use case, receive a build — and the more expensive that build,
-> the more the site earns.
+> The more expensive the build, the more the site earns.
 > I have been building PCs since Windows 95. That advice is usually wrong."
 
-**[0:25–0:50] この道具は逆を返す**
+**[0:20–0:40] この道具は逆を返す**
 
 > 画面：MOTTAINAI のトップ。タグラインを見せる
 >
@@ -93,67 +101,90 @@ gcloud run services describe mottainai --region asia-northeast1
 > This agent looks for reasons you do NOT need to spend money.
 > The answer it is most pleased to reach is zero."
 
-**[0:50–1:40] 実演①：スクショ2枚**
+**[0:40–1:50] 実演①：このPCをライブでスクショ判定（未編集ライブ実行・本編）**
 
 > 画面：設定 › システム › 詳細情報 を <kbd>Win+Shift+S</kbd> で切り取り → ページに <kbd>Ctrl+V</kbd>
-> → ドライブの最適化画面（メディアの種類の列）も同じ手順で貼る → 用途を選ぶ → 実行
-> フリートのパネルが動き出すところを2〜3秒だけ見せる
+> → ドライブの最適化画面も同じ手順で貼る → 用途に 1080p gaming を追加（officeは選択済み）→ 実行
+> → フリートのパネルが動く30秒は**そのまま映し続ける**（下の字幕で埋める）→ 見出しが出るまで
 >
-> 字幕:
-> "You do not need to open the case or know what is inside.
-> Windows already knows — two of its own screens say everything this tool judges.
-> Snip, paste, done. Two agents start at once — one reads the hardware from the images,
+> 操作中の字幕:
+> "This is the machine recording this video. Let it judge itself — live.
+> You do not need to open the case. Windows already knows —
+> two of its own screens say everything this tool judges. Snip, paste, done."
+>
+> 待ち時間の字幕（設計思想の前倒し・パネルが動いている間に流す）:
+> "Two agents start at once — one reads the hardware from the images,
 > one reads what you actually do with the machine.
-> Then the verdict is computed. Not by a model — by ordinary, tested code."
+> Then the verdict is computed. Not by a model — by ordinary, tested code.
+> A tool that argues from cost cannot afford a hallucinated price."
 >
-> ⚠ 判定は15〜35秒かかる（Gemini側のテール遅延）が、**ルールが「未編集のライブ実行」を
-> 要求しているためカットしない**。待ち時間は[2:50]の設計思想の字幕をここに前倒しして埋める
-> ＝実行は途切れず映り続け、無言の待ちも生まれない。フリートのパネルが動いているので
-> 画面が止まって見えることもない。
+> ⚠ 判定は15〜35秒（実測30.1秒）。**ルールが「未編集のライブ実行」を要求しているためカットしない**。
+> フリートのパネルが動いているので画面が止まって見えることはない。
 
-**[1:40–2:20] 結果**
+**[1:50–2:20] 結果①：買う物なし**
 
-> 画面：判定結果。見出し → 部位ごとの表 → Windows 11 の欄
->
-> 字幕:
-> "A 2017 office machine. The CPU is fine — years of headroom for this use.
-> The graphics card is not something you should buy at all.
-> One part is holding it back: the hard drive.
-> Nine thousand nine hundred and ninety yen. Not a new computer."
-
-**[2:20–2:50] 効いている判断を2つ**
-
-> 画面：ストレージ行の「この用途に必要なのは256GB」の注記を拡大
+> 画面：見出し → 部位の表を上からゆっくり → RAM行 → ストレージ行 → Windows 11 の欄
 >
 > 字幕:
-> "Two decisions a shopping tool never makes.
-> It sizes the fix to the need — a 1TB drive does not imply a 1TB replacement.
-> And when an upgrade costs as much as a whole used machine, it says so,
-> and removes it from the total."
+> "The verdict: there is nothing to buy.
+> 32GB of RAM — double what this workload needs. A shop calls that a selling point.
+> This tool calls it overkill.
+> The 112GB drive is tight — but an added drive covers it.
+> Not a reason to replace the machine. And Windows 11? At worst, one free BIOS setting."
 
-**[2:50–3:15] 設計の芯**（※字幕を実演①の待ち時間に前倒しした場合、ここは `npm test` の画面だけ残して短縮）
+**[2:20–2:55] 実演②：2017年の事務機を手入力**
 
-> 画面：`core/verdict.js` を映し、`npm test` を流して **127 passed** を見せる
+> 画面：ページを再読み込み → 手入力欄に CPU `i5-7500`・GPU `integrated`・RAM 8GB・Storage HDD
+> → 用途は office のまま → 実行（約10秒で返る）→ 見出し
+>
+> 字幕:
+> "Now the machines Windows 10's end of support is about to orphan.
+> A 2017 office PC: aging CPU, integrated graphics, 8GB, hard drive.
+> Replace exactly one thing: the storage. ¥9,990. The machine itself stays."
+
+**[2:55–3:20] 結果②：効いている判断**
+
+> 画面：ストレージ行の修理内容（SSD 500GB ¥9,990・出典リンク）→
+> 「This workload needs 256GB」の注記で3秒止まる → Windows 11 の欄（非対応でも道が3つ）
+>
+> 字幕:
+> "It sizes the fix to the need — 256GB is enough here, so it never
+> tells you to match the capacity you happen to own.
+> The price is a real shop price, with its source.
+> And even off Microsoft's list, replacement is not the only road."
+
+**[3:20–3:40] 設計の芯（bat前半）**
+
+> 画面：`core/verdict.js` を数秒映す → 証明画面バット（`npm test` → **127 passed**）
 >
 > 字幕:
 > "Models perceive and explain. Deterministic code decides.
-> A tool that argues from cost cannot afford a hallucinated price.
-> An early version printed 'solved for free' while quietly needing 15,800 yen of RAM.
-> There is now a test that fails if a headline claims zero while any part is short."
+> An early version printed 'solved for free' while quietly needing ¥15,800 of RAM.
+> There is now a test that fails if a headline claims zero while any part is short.
+> 127 of them run on every build."
 
-**[3:15–3:30] Google Cloud で動いていること**
+**[3:40–3:55] Google Cloud で動いていること（bat後半）**
 
-> 画面：`gcloud run services describe mottainai` の出力 → 公開URLを開いて動かす
+> 画面：`gcloud run services describe mottainai` の出力（URL・Ready True・イメージ名）
 >
 > 字幕:
-> "Running on Cloud Run, with Gemini 3.7 Flash behind the two perception agents.
+> "Running on Cloud Run, Gemini 3.7 Flash behind the two perception agents.
 > Windows 10 support ends October 2027. Hundreds of millions of machines
 > are about to be told they are obsolete. Most of them are not."
 
 ---
 
-## 録画時の注意（2026-08-25 追記）
+## 録画時の注意（2026-08-25 追記・同日夜に実測予行済み）
 
+- **両実演とも本番APIで予行済み**：①この録画PC実機のスクショ2枚（設定の詳細情報＋ドライブの最適化）を
+  そのまま投げて headline "There is nothing to buy."・**SSD 112GBの容量まで正しく読めた**
+  （Aboutの「使用領域 5.90TB/112GB」という罠表記も誤読しない）・unresolvedゼロ・30.1秒。
+  ②手入力 i5-7500/integrated/8GB/HDD → "Replace exactly one thing: ¥9,990"・9.6秒。
+- スクショにはデバイス名（DESKTOP-…）が映るが、ローカルのPC名でしかなく公開実害なし。
+  気になるならスペックのタイル4枚だけ切り取っても読める（実測はウィンドウ全体で成功）。
+- 実演①の判定中にGeminiエラーが出たら、そのテイクは捨ててもう一度（数%の確率で起きうる）。
+- 証明画面バットは**認証をリフレッシュトークンから毎回自動再構築**するよう改修済み（2026-08-25）。
+  gcloudのcredentials.dbが壊れていても動く。トークンは画面に映らない。
 - **既存の録画は使えない**（「あと約10年」の旧文言＋フッター22項目が映っている。現在は127項目）
 - 画面の文字は全部英語になっている。字幕と画面の言語が揃うので焼き込みは判定文の補足だけでいい
 - **「Solved for ¥0. One BIOS setting is all it takes.」はスクショ経路では絶対に出ない**
