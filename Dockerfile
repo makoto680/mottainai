@@ -9,9 +9,11 @@ RUN npm ci --omit=dev
 
 COPY . .
 
-# ビルド時にデータを作り直し、判定ロジックの自己検証を通す。
-# ここで落ちれば壊れたものが公開されない。
-RUN node data/build_parts.js && node core/selftest.js
+# ビルド時に判定ロジックの自己検証を通す。ここで落ちれば壊れたものが公開されない。
+# parts.json はコミット済みの正本をそのまま使う。作り直し（build_parts.js）は
+# data/vendor/ の生ダンプが要るが、あれは配布しないと決めたので
+# このビルドはリポジトリにある物だけで完結させる（=誰がcloneしても同じに作れる）。
+RUN node core/selftest.js
 
 # Cloud Run は PORT を渡してくる
 ENV PORT=8080
