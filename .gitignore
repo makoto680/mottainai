@@ -2,8 +2,7 @@ node_modules/
 .env
 _t*.mjs
 _probe*.mjs
-recordings/*.mp4
-recordings/*.mkv
+recordings/
 
 # Vendor benchmark dumps — redistribution not yet decided
 data/vendor/
